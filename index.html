@@ -243,6 +243,20 @@
     .cat-section-lbl{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;display:flex;align-items:center;gap:8px}
     .cat-section-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
 
+    /* MIGRATION BANNER */
+    .mig-banner{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.08));border:1px solid rgba(251,191,36,.3);border-radius:16px;padding:16px;margin:16px 20px 0;display:none;align-items:flex-start;gap:12px}
+    .mig-banner.on{display:flex}
+    .mig-ico{font-size:26px;flex-shrink:0;margin-top:2px}
+    .mig-body{flex:1}
+    .mig-title{font-size:14px;font-weight:700;color:var(--yellow);margin-bottom:4px}
+    .mig-txt{font-size:12px;color:var(--txt3);line-height:1.5;margin-bottom:12px}
+    .mig-btns{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-mig{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:1px solid;transition:all .18s}
+    .btn-mig.yes{background:rgba(251,191,36,.15);color:var(--yellow);border-color:rgba(251,191,36,.35)}
+    .btn-mig.yes:hover{background:rgba(251,191,36,.25)}
+    .btn-mig.no{background:transparent;color:var(--txt3);border-color:var(--bdr)}
+    .btn-mig.no:hover{background:var(--surf);color:var(--txt2)}
+
     .toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(16px);background:#1f1040;border:1px solid rgba(102,126,234,.4);color:var(--txt);padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:all .28s;white-space:nowrap;pointer-events:none}
     .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -306,6 +320,19 @@
     <button class="tab on"      onclick="switchTab('dashboard')">📊 Resumen</button>
     <button class="tab"         onclick="switchTab('lista')">📋 Lista</button>
     <button class="tab usd-tab" onclick="switchTab('usd')">💵 USD</button>
+  </div>
+
+  <!-- MIGRATION BANNER -->
+  <div class="mig-banner" id="mig-banner">
+    <div class="mig-ico">📦</div>
+    <div class="mig-body">
+      <div class="mig-title">Datos anteriores encontrados</div>
+      <div class="mig-txt">Tenés gastos guardados antes de crear tu cuenta. ¿Querés importarlos a tu perfil?</div>
+      <div class="mig-btns">
+        <button class="btn-mig yes" onclick="runMigration()">✅ Sí, importar</button>
+        <button class="btn-mig no"  onclick="dismissMigration()">No, ignorar</button>
+      </div>
+    </div>
   </div>
 
   <!-- DASHBOARD -->
@@ -840,6 +867,8 @@ function initFirebase() {
         renderAll();
         attachListeners();
         showApp(user);
+        // Check for legacy data to migrate
+        setTimeout(checkMigration, 1500);
       } else {
         showApp(null);
       }
@@ -1418,6 +1447,75 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&document.getElementById('login-email')===document.activeElement)loginEmail();
   if(e.key==='Enter'&&document.getElementById('login-pass')===document.activeElement)loginEmail();
 });
+
+/* ════════════════════════════════
+   MIGRATION — old paths → user paths
+════════════════════════════════ */
+const LEGACY_UID = 'kzcWCrbRh1dVSKPBHA5x654FbYB2';
+
+async function checkMigration() {
+  if (!db || !currentUID) return;
+  // Only show banner if the logged-in user matches the legacy UID
+  // (or if legacy data exists at root paths)
+  try {
+    const snap = await db.ref('gastos').once('value');
+    const snapUsd = await db.ref('usd').once('value');
+    const hasLegacy = snap.val() || snapUsd.val();
+    if (hasLegacy) {
+      document.getElementById('mig-banner').classList.add('on');
+    }
+  } catch(e) { console.warn('Migration check error:', e); }
+}
+
+async function runMigration() {
+  const banner = document.getElementById('mig-banner');
+  banner.querySelector('.mig-title').textContent = '⏳ Migrando datos…';
+  banner.querySelector('.mig-btns').style.display = 'none';
+
+  try {
+    let migratedArs = 0, migratedUsd = 0;
+
+    // Migrate gastos
+    const snapArs = await db.ref('gastos').once('value');
+    const arsData = snapArs.val();
+    if (arsData) {
+      const entries = Object.values(arsData).filter(e => e && e.id);
+      for (const e of entries) {
+        await db.ref(arsPath(e.id)).set(e);
+        migratedArs++;
+      }
+      // Remove legacy root path after successful copy
+      await db.ref('gastos').remove();
+    }
+
+    // Migrate usd
+    const snapUsd = await db.ref('usd').once('value');
+    const usdData = snapUsd.val();
+    if (usdData) {
+      const entries = Object.values(usdData).filter(t => t && t.id);
+      for (const t of entries) {
+        await db.ref(usdPath(t.id)).set(t);
+        migratedUsd++;
+      }
+      await db.ref('usd').remove();
+    }
+
+    banner.classList.remove('on');
+    toast(`✅ Migración completa: ${migratedArs} gastos + ${migratedUsd} USD importados`, 4000);
+    // Listeners will pick up the new data automatically
+  } catch(e) {
+    console.error('Migration error:', e);
+    banner.querySelector('.mig-title').textContent = '⚠️ Error en la migración';
+    banner.querySelector('.mig-txt').textContent = 'Intentá de nuevo o contactá soporte.';
+    banner.querySelector('.mig-btns').style.display = 'flex';
+    toast('❌ Error al migrar, intentá de nuevo');
+  }
+}
+
+function dismissMigration() {
+  document.getElementById('mig-banner').classList.remove('on');
+  toast('Datos anteriores ignorados');
+}
 
 /* ════════════════════════════════
    INIT
