@@ -1,0 +1,37 @@
+{
+  "name": "Mis Gastos",
+  "short_name": "Gastos",
+  "description": "Control de gastos personales con billetera USD y saldos compartidos",
+  "start_url": "/AppGastos/",
+  "scope": "/AppGastos/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0818",
+  "theme_color": "#667eea",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Agregar gasto",
+      "short_name": "Nuevo gasto",
+      "description": "Agregar un gasto rápido",
+      "url": "/AppGastos/?action=quick-add",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='28'>＋</text></svg>", "sizes": "96x96" }]
+    }
+  ]
+}
