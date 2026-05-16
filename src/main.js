@@ -1,5 +1,6 @@
 import '/src/styles/main.css';
 import './bootstrap.js';
+import './ui/globals.js';
 import { auth, db } from './firebase/init.js';
 import { setupAuthListeners, doLogout } from './firebase/auth.js';
 import { state, updateState } from './state.js';
