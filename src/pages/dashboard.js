@@ -1,8 +1,9 @@
-import { nowKey, monthLabel, fmt } from '../utils/format.js';
+import { nowKey, monthLabel, fmt, monthKey, fmtDate } from '../utils/format.js';
 import { calcSummary, calcByCat } from '../utils/calc.js';
+import { expHTML } from '../utils/render-helpers.js';
 
 // Renderizar dashboard
-export function renderDashboard(expenses, usdTx, debts, persons, categories, budgets, goals, accounts) {
+export function renderDashboard(expenses, budgets, goals) {
   const mk = nowKey();
 
   // Actualizar mes en header
@@ -12,23 +13,28 @@ export function renderDashboard(expenses, usdTx, debts, persons, categories, bud
   // Calcular resumen
   const { ing, pag, real, bal } = calcSummary(mk, expenses);
 
-  // Renderizar cards
-  document.getElementById('c-ing').textContent = fmt(ing);
-  document.getElementById('c-pag').textContent = fmt(pag);
-  document.getElementById('c-real').textContent = fmt(real);
+  // Renderizar cards principales
+  const cIng = document.getElementById('c-ing');
+  const cPag = document.getElementById('c-pag');
+  const cReal = document.getElementById('c-real');
+  const cBal = document.getElementById('c-bal');
 
-  const balEl = document.getElementById('c-bal');
-  balEl.textContent = (bal < 0 ? '-' : '') + fmt(Math.abs(bal));
-  balEl.className = 'card-val ' + (bal >= 0 ? 'g' : 'r');
+  if (cIng) cIng.textContent = fmt(ing);
+  if (cPag) cPag.textContent = fmt(pag);
+  if (cReal) cReal.textContent = fmt(real);
 
-  // Renderizar gráficos y stats
-  renderPieChart(mk, expenses);
-  renderMonthlyChart(mk, expenses);
+  if (cBal) {
+    cBal.textContent = (bal < 0 ? '-' : '') + fmt(Math.abs(bal));
+    cBal.className = 'card-val ' + (bal >= 0 ? 'g' : 'r');
+  }
+
+  // Proyección
   renderProjection(mk, expenses);
-  renderRecurringReminders(mk, expenses);
+
+  // Stats
   renderStats(mk, expenses);
 
-  // Renderizar últimos movimientos
+  // Últimos movimientos
   const recent = [...expenses]
     .filter(e => monthKey(e.date) === mk)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
@@ -42,31 +48,69 @@ export function renderDashboard(expenses, usdTx, debts, persons, categories, bud
   }
 }
 
-function renderPieChart(mk, expenses) {
-  // TODO: Implementar después, por ahora solo stub
-}
-
-function renderMonthlyChart(mk, expenses) {
-  // TODO: Implementar después, por ahora solo stub
-}
-
 function renderProjection(mk, expenses) {
-  // TODO: Implementar después, por ahora solo stub
-}
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 
-function renderRecurringReminders(mk, expenses) {
-  // TODO: Implementar después, por ahora solo stub
+  if (dayOfMonth < 3) {
+    const card = document.getElementById('proj-card');
+    if (card) card.style.display = 'none';
+    return;
+  }
+
+  const spentSoFar = expenses
+    .filter(e => monthKey(e.date) === mk && e.type === 'Egreso')
+    .reduce((s, e) => s + (e.myAmount ?? e.amount), 0);
+
+  const dailyRate = spentSoFar / dayOfMonth;
+  const projected = Math.round(dailyRate * daysInMonth);
+  const ing = expenses
+    .filter(e => monthKey(e.date) === mk && e.type === 'Ingreso')
+    .reduce((s, e) => s + e.amount, 0);
+
+  const projCard = document.getElementById('proj-card');
+  const projVal = document.getElementById('c-proj');
+  const projHint = document.getElementById('c-proj-hint');
+
+  if (projCard) projCard.style.display = '';
+  if (projVal) {
+    projVal.textContent = fmt(projected);
+    projVal.className = 'card-val ' + (projected > ing && ing > 0 ? 'r' : 'y');
+  }
+
+  const remaining = Math.round(dailyRate * (daysInMonth - dayOfMonth));
+  if (projHint) projHint.textContent = `~${fmt(remaining)} más hasta fin de mes`;
 }
 
 function renderStats(mk, expenses) {
-  // TODO: Implementar después, por ahora solo stub
-}
+  const rows = expenses.filter(e => monthKey(e.date) === mk && e.type === 'Egreso');
+  if (!rows.length) {
+    const grid = document.getElementById('stats-grid');
+    if (grid) grid.style.display = 'none';
+    return;
+  }
 
-function monthKey(d) {
-  return d ? d.slice(0, 7) : '';
-}
+  const { ing, real } = calcSummary(mk, expenses);
+  const rate = ing > 0 ? Math.round((1 - real / ing) * 100) : 0;
+  const today = new Date().getDate();
+  const dailyAvg = today > 0 ? Math.round(real / today) : 0;
 
-function expHTML(e, showDelete) {
-  // TODO: Implementar después, por ahora solo stub
-  return '';
+  // Top category
+  const catMap = {};
+  rows.forEach(e => {
+    catMap[e.category] = (catMap[e.category] || 0) + (e.myAmount ?? e.amount);
+  });
+  const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
+
+  const grid = document.getElementById('stats-grid');
+  if (grid) grid.style.display = 'grid';
+
+  const stRate = document.getElementById('st-rate');
+  const stDaily = document.getElementById('st-daily');
+  const stTopcat = document.getElementById('st-topcat');
+
+  if (stRate) stRate.textContent = rate + '%';
+  if (stDaily) stDaily.textContent = fmt(dailyAvg);
+  if (stTopcat && topCat) stTopcat.textContent = topCat[0];
 }

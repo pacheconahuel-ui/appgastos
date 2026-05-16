@@ -9,10 +9,10 @@
       --modal-bg:#160e2a;
     }
     body.light{
-      --bg:#f0eeff;--surf:rgba(0,0,0,.04);--surf2:rgba(0,0,0,.07);
-      --bdr:rgba(0,0,0,.1);--bdr2:rgba(0,0,0,.18);
-      --txt:#1a1040;--txt2:rgba(26,16,64,.6);--txt3:rgba(26,16,64,.45);
-      --modal-bg:#fff;
+      --bg:#f8f6ff;--surf:rgba(0,0,0,.03);--surf2:rgba(0,0,0,.06);
+      --bdr:rgba(0,0,0,.12);--bdr2:rgba(0,0,0,.20);
+      --txt:#0d0818;--txt2:rgba(13,8,24,.75);--txt3:rgba(13,8,24,.55);
+      --modal-bg:#ffffff;
     }
     body.light::before{background:radial-gradient(ellipse 60% 50% at 15% 10%,rgba(102,126,234,.08) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 85% 90%,rgba(118,75,162,.08) 0%,transparent 70%);}
     body.light .login-card,.body.light .modal{background:rgba(255,255,255,.9);}
