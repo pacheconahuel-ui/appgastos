@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/pacheconahuel-ui/AppGastos#readme",
   "devDependencies": {
+    "terser": "^5.47.1",
     "vite": "^8.0.13"
   },
   "dependencies": {
