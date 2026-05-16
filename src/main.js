@@ -16,9 +16,6 @@ console.log('[App] Iniciando Mis Gastos...');
 // Setup auth listeners
 setupAuthListeners();
 
-// Render FABs
-renderFabs();
-
 // Theme toggle
 const btnTheme = document.getElementById('btn-theme');
 if (btnTheme) {
@@ -121,5 +118,26 @@ onValue(ref(db, '.info/connected'), (snapshot) => {
 
 // Initialize theme
 loadTheme();
+
+// Render FABs LAST with delay to ensure legacy.js doesn't override
+function fixFabs() {
+  const btn = document.getElementById('fab-ars');
+  if (btn) {
+    btn.textContent = '＋';
+    btn.removeAttribute('onclick');
+    btn.onclick = () => {
+      if (window.openModal) window.openModal();
+    };
+  }
+}
+
+setTimeout(() => {
+  renderFabs();
+  fixFabs();
+  console.log('[FABs] Rendered after legacy.js');
+}, 100);
+
+// Check and fix every 500ms to catch legacy.js modifications
+setInterval(fixFabs, 500);
 
 console.log('[App] Listo ✅');

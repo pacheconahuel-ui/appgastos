@@ -1,10 +1,10 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { FB_CONFIG } from '../config.js';
 
-// Inicializar Firebase
-const app = initializeApp(FB_CONFIG);
+// Reusar app existente si el compat SDK ya la inicializó
+const app = getApps().length ? getApp() : initializeApp(FB_CONFIG);
 
 // Servicios
 export const auth = getAuth(app);

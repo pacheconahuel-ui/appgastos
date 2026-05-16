@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v1';
+const CACHE = 'gastos-v2';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
@@ -33,17 +33,28 @@ self.addEventListener('fetch', e => {
   if (e.request.url.includes('firebase') || e.request.url.includes('googleapis.com/identitytoolkit')) {
     return;
   }
+  // HTML navigation — network first so updates are always picked up
+  if (e.request.mode === 'navigate' || e.request.destination === 'document') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+  // Static assets — cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        // Cache successful GET responses
         if (e.request.method === 'GET' && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => cached); // Fallback to cache if offline
+      }).catch(() => cached);
     })
   );
 });

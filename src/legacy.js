@@ -9,7 +9,6 @@ function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}
 function monthKey(d){return d?d.slice(0,7):'';}
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
-function icon(cat){return ICONS[cat]||'📌';}
 function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.sharedPercent/100):e.amount);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -22,6 +21,20 @@ function saveIconOverrides(map){try{localStorage.setItem(lsKey('gp_icons_v1'),JS
 function catIcon(cat){const ov=loadIconOverrides();return ov[cat]||ICONS[cat]||'📌';}
 // Override the global icon() call used in expHTML etc.
 function icon(cat){return catIcon(cat);}
+
+// Hidden categories (default cats the user doesn't use)
+function loadHiddenCats(){try{return JSON.parse(localStorage.getItem(lsKey('gp_hidden_cats_v1')))||[];}catch{return[];}}
+function saveHiddenCats(arr){try{localStorage.setItem(lsKey('gp_hidden_cats_v1'),JSON.stringify(arr));}catch{}}
+function isCatHidden(cat){return loadHiddenCats().includes(cat);}
+function toggleHideCat(cat){
+  const hidden=loadHiddenCats();
+  const idx=hidden.indexOf(cat);
+  if(idx>-1)hidden.splice(idx,1);else hidden.push(cat);
+  saveHiddenCats(hidden);
+  renderCatManager();
+  buildCatSelect();
+  toast(idx>-1?`👁️ "${cat}" visible nuevamente`:`🚫 "${cat}" ocultada del formulario`);
+}
 
 function editCatIcon(catName){
   const current=catIcon(catName);
@@ -597,9 +610,10 @@ function setType(t){
   document.getElementById('btn-in').className='type-btn'+(t==='Ingreso'?' ai':'');
 }
 function buildCatSelect(){
+  const hidden=loadHiddenCats();
   const sel=document.getElementById('f-cat'),cur=sel.value;
-  sel.innerHTML=cats.map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
-  if(cur&&cats.includes(cur))sel.value=cur;
+  sel.innerHTML=cats.filter(c=>!hidden.includes(c)).map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
+  if(cur&&cats.includes(cur)&&!hidden.includes(cur))sel.value=cur;
 }
 function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
@@ -610,14 +624,28 @@ function openCatManager(){renderCatManager();document.getElementById('cat-overla
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
 function catOverlayClick(ev){if(ev.target===document.getElementById('cat-overlay'))closeCatManager();}
 function renderCatManager(){
-  const custom=customCats();let html='';
+  const custom=customCats();const hidden=loadHiddenCats();let html='';
+  // Custom cats
   if(custom.length>0){
     html+=`<div class="cat-section-lbl">Personalizadas (${custom.length})</div><div class="cat-manager-list">`;
     custom.forEach(c=>{html+=`<div class="cat-manager-item"><div class="cat-manager-ico">${catIcon(c)}</div><div class="cat-manager-name custom">${esc(c)}</div><span class="cat-manager-badge">Custom</span><div class="cat-manager-actions"><button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button><button class="cat-mgr-btn rename" onclick="renameCat('${esc(c)}')">✏️</button><button class="cat-mgr-btn delete" onclick="confirmDeleteCat('${esc(c)}')">🗑️</button></div></div>`;});
     html+=`</div>`;
   }else{html+=`<div class="empty" style="padding:24px 0"><div class="empty-ico">🏷️</div><p>No tenés categorías personalizadas.</p></div>`;}
+  // Default cats (only those still active — not renamed away)
+  const activeDefs=DEF_CATS.filter(c=>cats.includes(c));
   html+=`<div class="cat-section-lbl">Predefinidas</div><div class="cat-manager-list">`;
-  DEF_CATS.forEach(c=>{html+=`<div class="cat-manager-item"><div class="cat-manager-ico">${catIcon(c)}</div><div class="cat-manager-name default">${esc(c)}</div><div class="cat-manager-actions"><button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button></div></div>`;});
+  activeDefs.forEach(c=>{
+    const isHidden=hidden.includes(c);
+    html+=`<div class="cat-manager-item${isHidden?' cat-hidden':''}">
+      <div class="cat-manager-ico">${catIcon(c)}</div>
+      <div class="cat-manager-name default">${esc(c)}${isHidden?'<span class="cat-hidden-badge">oculta</span>':''}</div>
+      <div class="cat-manager-actions">
+        <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
+        <button class="cat-mgr-btn rename" onclick="renameCat('${esc(c)}')" title="Renombrar">✏️</button>
+        <button class="cat-mgr-btn ${isHidden?'show':'hide'}" onclick="toggleHideCat('${esc(c)}')" title="${isHidden?'Mostrar':'Ocultar'}">${isHidden?'👁️':'🚫'}</button>
+      </div>
+    </div>`;
+  });
   html+=`</div>`;
   document.getElementById('cat-manager-body').innerHTML=html;
 }
@@ -1510,6 +1538,3 @@ async function saveQuickAdd(){
 ══════════════════════════════════ */
 initFirebase();
 setTimeout(checkMagicLink,500);
-</script>
-</body>
-</html>

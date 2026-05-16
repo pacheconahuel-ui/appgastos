@@ -9,6 +9,27 @@ export function renderFabs() {
     <button class="fab hidden" id="fab-account" title="Transferir dinero" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 8px 32px rgba(96,165,250,.35)">⇄</button>
   `;
   container.innerHTML = html;
+
+  // Setup event listeners
+  document.getElementById('fab-ars')?.addEventListener('click', () => {
+    if (window.openModal) window.openModal();
+  });
+
+  document.getElementById('fab-quick')?.addEventListener('click', () => {
+    if (window.openQuickAdd) window.openQuickAdd();
+  });
+
+  document.getElementById('fab-usd')?.addEventListener('click', () => {
+    if (window.openUsdModal) window.openUsdModal();
+  });
+
+  document.getElementById('fab-debt')?.addEventListener('click', () => {
+    if (window.openDebtModal) window.openDebtModal();
+  });
+
+  document.getElementById('fab-account')?.addEventListener('click', () => {
+    if (window.openTransferModal) window.openTransferModal();
+  });
 }
 
 export function showFabsForTab(tab) {

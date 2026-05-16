@@ -23,14 +23,64 @@ window.closeContactsModal = closeContactsModal;
 window.openCatManager = openCatManager;
 window.closeCatManager = closeCatManager;
 
-// Otros modales
-window.closeSettleModal = () => console.log('[Settle Modal] Cerrar');
-window.closeTransferModal = () => console.log('[Transfer Modal] Cerrar');
-window.closeAccountModal = () => console.log('[Account Modal] Cerrar');
-window.closeGoalModal = () => console.log('[Goal Modal] Cerrar');
-window.closeBudgetModal = () => console.log('[Budget Modal] Cerrar');
-window.closeAddContactModal = () => console.log('[Add Contact Modal] Cerrar');
-window.closeQuickAdd = () => console.log('[Quick Add Modal] Cerrar');
-window.closeGlobalSearch = () => console.log('[Global Search] Cerrar');
+// Funciones globales para operaciones de gastos (llamadas desde HTML inline)
+window.editExp = (id, event) => {
+  event?.preventDefault();
+  const expense = window.expenses?.find(e => e.id === id);
+  if (expense) openModal(expense);
+};
+
+window.delExp = (id, event) => {
+  event?.preventDefault();
+  const expense = window.expenses?.find(e => e.id === id);
+  if (expense) {
+    openModal(expense);
+    setTimeout(() => {
+      const delBtn = document.getElementById('btn-del-exp');
+      if (delBtn) delBtn.click();
+    }, 100);
+  }
+};
+
+// Funciones globales para USD
+window.editUsdTx = (id, event) => {
+  event?.preventDefault();
+  const tx = window.usdTx?.find(t => t.id === id);
+  if (tx) openUsdModal(tx);
+};
+
+window.delUsdTx = (id, event) => {
+  event?.preventDefault();
+  const tx = window.usdTx?.find(t => t.id === id);
+  if (tx) {
+    openUsdModal(tx);
+    setTimeout(() => {
+      const delBtn = document.getElementById('btn-del-usd');
+      if (delBtn) delBtn.click();
+    }, 100);
+  }
+};
+
+// Otros modales (placeholders por ahora)
+window.closeSettleModal = () => { const o = document.getElementById('settle-overlay'); if (o) o.classList.remove('on'); };
+window.openSettleModal = () => { const o = document.getElementById('settle-overlay'); if (o) o.classList.add('on'); };
+
+window.closeTransferModal = () => { const o = document.getElementById('transfer-overlay'); if (o) o.classList.remove('on'); };
+window.openTransferModal = () => { const o = document.getElementById('transfer-overlay'); if (o) o.classList.add('on'); };
+
+window.closeAccountModal = () => { const o = document.getElementById('account-overlay'); if (o) o.classList.remove('on'); };
+window.openAccountModal = () => { const o = document.getElementById('account-overlay'); if (o) o.classList.add('on'); };
+
+window.closeGoalModal = () => { const o = document.getElementById('goal-overlay'); if (o) o.classList.remove('on'); };
+window.openGoalModal = () => { const o = document.getElementById('goal-overlay'); if (o) o.classList.add('on'); };
+
+window.closeBudgetModal = () => { const o = document.getElementById('budget-overlay'); if (o) o.classList.remove('on'); };
+window.openBudgetModal = () => { const o = document.getElementById('budget-overlay'); if (o) o.classList.add('on'); };
+
+window.closeQuickAdd = () => { const o = document.getElementById('quick-add-overlay'); if (o) o.classList.remove('on'); };
+window.openQuickAdd = () => { const o = document.getElementById('quick-add-overlay'); if (o) o.classList.add('on'); };
+
+window.closeGlobalSearch = () => { const o = document.getElementById('gsearch-overlay'); if (o) o.classList.remove('on'); };
+window.openGlobalSearch = () => { const o = document.getElementById('gsearch-overlay'); if (o) o.classList.add('on'); };
 
 console.log('[Globals] Funciones expuestas en window');
