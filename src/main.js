@@ -1,10 +1,22 @@
 import '/src/styles/main.css';
+import './bootstrap.js';
 import { auth, db } from './firebase/init.js';
+import { setupAuthListeners, doLogout } from './firebase/auth.js';
 import { state, updateState } from './state.js';
+import { renderFabs, showFabsForTab } from './ui/fabs.js';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
 
+// Legacy code - gradualmente iremos migrando esto
+import './legacy.js';
+
 console.log('[App] Iniciando Mis Gastos...');
+
+// Setup auth listeners
+setupAuthListeners();
+
+// Render FABs
+renderFabs();
 
 // Theme toggle
 const btnTheme = document.getElementById('btn-theme');
@@ -25,16 +37,16 @@ function loadTheme() {
   }
 }
 
-// Logout
-const btnLogout = document.getElementById('btn-logout');
-if (btnLogout) {
-  btnLogout.addEventListener('click', async () => {
-    if (confirm('¿Cerrar sesión?')) {
-      await signOut(auth);
-      location.reload();
+// Tab switching listener
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.getAttribute('data-tab');
+    if (tabName && window.switchTab) {
+      window.switchTab(tabName);
+      showFabsForTab(tabName);
     }
   });
-}
+});
 
 // Auth listener
 onAuthStateChanged(auth, async (user) => {
@@ -45,11 +57,15 @@ onAuthStateChanged(auth, async (user) => {
       currentUser: user,
       isLoggedIn: true,
     });
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('login-screen')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
 
     // Cargar datos del usuario
     loadUserData(user.uid);
+
+    // Update header
+    const badge = document.getElementById('hdr-badge');
+    if (badge) badge.textContent = user.email?.split('@')[0] || 'Usuario';
   } else {
     console.log('[Auth] Sin usuario');
     updateState({
@@ -57,8 +73,8 @@ onAuthStateChanged(auth, async (user) => {
       currentUser: null,
       isLoggedIn: false,
     });
-    document.getElementById('login-screen').classList.remove('hidden');
-    document.getElementById('app').classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
+    document.getElementById('app')?.classList.add('hidden');
   }
 });
 
