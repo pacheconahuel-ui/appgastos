@@ -1606,7 +1606,7 @@ function renderSaldosTab(){
 
       html+=`<div class="person-card" id="${cardId}">
         <div class="person-header">
-          <div class="person-ava">${p.emoji}</div>
+          <div class="person-ava">${esc(p.emoji)}</div>
           <div class="person-info">
             <div class="person-name">${esc(p.name)}</div>
             <div class="person-sub">${activeDebts.length} movimiento${activeDebts.length!==1?'s':''} activo${activeDebts.length!==1?'s':''}</div>
@@ -1676,7 +1676,7 @@ function renderSaldosTab(){
     hiddenPersons.forEach(p=>{
       html+=`<div class="person-card" style="opacity:.5">
         <div class="person-header">
-          <div class="person-ava">${p.emoji}</div>
+          <div class="person-ava">${esc(p.emoji)}</div>
           <div class="person-info"><div class="person-name">${esc(p.name)}</div><div class="person-sub">Saldo en cero</div></div>
           <div class="person-balance"><div class="person-bal-val zero">$0</div></div>
         </div>
@@ -1771,7 +1771,7 @@ function renderSplitRows(){
   let html='';
   splitRows.forEach((row,i)=>{
     html+=`<div class="split-person-row">
-      <div style="width:28px;text-align:center;font-size:18px">${row.emoji}</div>
+      <div style="width:28px;text-align:center;font-size:18px">${esc(row.emoji)}</div>
       <div class="split-person-name">${esc(row.personName)}</div>
       <div class="split-preset-btns">
         <button class="split-preset ${row._preset==='50'?'on':''}" onclick="setSplitPreset(${i},'50')">50%</button>
@@ -1874,7 +1874,7 @@ function renderContactsList(){
 
 function contactItemHTML(p){
   return`<div class="cat-manager-item">
-    <div style="font-size:24px;width:36px;text-align:center">${p.emoji}</div>
+    <div style="font-size:24px;width:36px;text-align:center">${esc(p.emoji)}</div>
     <div class="cat-manager-name custom">${esc(p.name)}</div>
     <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'rgba(45,212,191,.1)':'rgba(255,255,255,.05)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'rgba(45,212,191,.2)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?'⭐ Fav':'Ocasional'}</div>
     <div class="cat-manager-actions">
@@ -2066,8 +2066,10 @@ async function saveExpense(){
   const notes=document.getElementById('f-notes').value.trim();
   const amt=parseFloat(document.getElementById('f-amt').value);
   const recurring=document.getElementById('f-recur').checked;
-  if(!date){toast('⚠️ Completá la fecha');return;}
-  if(!amt||amt<=0||isNaN(amt)){toast('⚠️ Ingresá un monto válido');return;}
+  if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('⚠️ Completá la fecha');return;}
+  if(!amt||amt<=0||isNaN(amt)||amt>999999999){toast('⚠️ Ingresá un monto válido');return;}
+  if(desc.length>300){toast('⚠️ Descripción muy larga (máx 300 caracteres)');return;}
+  if(notes.length>500){toast('⚠️ Notas muy largas (máx 500 caracteres)');return;}
 
   // Calculate my amount from split
   const splits=splitPanelOpen&&splitRows.length>0?splitRows.map(r=>({personId:r.personId,personName:r.personName,emoji:r.emoji,amount:parseFloat(r.amount)||0})):[];
@@ -2716,6 +2718,47 @@ window.addEventListener('appinstalled',()=>{
 });
 
 /* ══════════════════════════════════
+   BACK BUTTON — PWA (Android)
+   Cierra modales o pide confirmación
+   antes de salir de la app
+══════════════════════════════════ */
+(function setupBackButton(){
+  // Push estado inicial para tener algo en el stack
+  history.pushState({pwa:1},'');
+  let exitIntent=false,exitTimer=null;
+
+  window.addEventListener('popstate',()=>{
+    // 1. Cerrar diálogo de confirmación si está abierto
+    if(document.getElementById('conf-overlay')?.classList.contains('on')){
+      document.getElementById('conf-overlay').classList.remove('on');
+      history.pushState({pwa:1},'');return;
+    }
+    // 2. Cerrar búsqueda global
+    if(document.getElementById('gsearch-overlay')?.classList.contains('on')){
+      closeGlobalSearch();history.pushState({pwa:1},'');return;
+    }
+    // 3. Cerrar gestor de categorías
+    if(document.getElementById('cat-overlay')?.classList.contains('on')){
+      closeCatManager();history.pushState({pwa:1},'');return;
+    }
+    // 4. Cerrar modal principal (gasto, USD, deuda, etc.)
+    if(document.getElementById('m-overlay')?.classList.contains('on')){
+      closeModal();history.pushState({pwa:1},'');return;
+    }
+    // 5. Sin modal abierto — confirmar salida en 2 pasos
+    if(exitIntent){
+      clearTimeout(exitTimer);
+      // Segunda presión: no re-pushear, dejar salir
+      return;
+    }
+    history.pushState({pwa:1},'');
+    exitIntent=true;
+    toast('Presioná de nuevo para salir');
+    exitTimer=setTimeout(()=>{exitIntent=false;},2000);
+  });
+})();
+
+/* ══════════════════════════════════
    ACCOUNTS (CUENTAS)
 ══════════════════════════════════ */
 const ACC_SK='gp_accounts_v1', TRF_SK='gp_transfers_v1';
@@ -2746,7 +2789,7 @@ function renderCuentasTab(){
   accounts.forEach(a=>{
     const bal=accountBalance(a.id);arsTotal+=bal;const bc=bal>=0?'g':'r';
     html+=`<div class="account-card" onclick="openAccountModal('${a.id}')">
-      <div class="account-ava" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2)">${a.emoji}</div>
+      <div class="account-ava" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2)">${esc(a.emoji)}</div>
       <div class="account-info"><div class="account-name">${esc(a.name)}</div><div class="account-type">${expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length} mov. este mes</div></div>
       <div class="account-bal"><div class="account-bal-val card-val ${bc}">${bal<0?'-':''}${fmt(bal)}</div>
       <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin-top:6px;width:26px;height:26px;font-size:11px">🗑️</button></div>
@@ -2802,7 +2845,7 @@ function confirmDeleteAccount(id,ev){
 }
 function openTransferModal(){
   if(!accounts.length){toast('⚠️ Primero creá al menos 2 billeteras');return;}
-  const opts=accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+  const opts=accounts.map(a=>`<option value="${a.id}">${esc(a.emoji)} ${esc(a.name)}</option>`).join('');
   document.getElementById('tf-from').innerHTML=opts;document.getElementById('tf-to').innerHTML=opts;
   if(accounts.length>1)document.getElementById('tf-to').selectedIndex=1;
   document.getElementById('tf-amt').value='';document.getElementById('tf-desc').value='';
@@ -2876,7 +2919,7 @@ function renderGoalsSection(){
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Metas de ahorro</div><button onclick="openGoalModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Nueva</button></div>`;
   goals.forEach(g=>{
     const pct=Math.min(100,Math.round((g.current/g.target)*100)),done=pct>=100,remaining=Math.max(0,g.target-g.current);
-    html+=`<div class="goal-card"><div class="goal-header"><div class="goal-ava">${g.emoji}</div><div><div class="goal-name">${esc(g.name)} ${done?'✅':''}</div><div class="goal-target">Meta: ${fmt(g.target)}</div></div><div style="margin-left:auto;display:flex;gap:5px"><button class="btn-ico edit" onclick="openGoalModal('${g.id}')">✏️</button><button class="btn-ico del" onclick="deleteGoal('${g.id}')">🗑️</button></div></div><div class="goal-progress"><div class="goal-bar"><div class="goal-fill ${done?'done':''}" style="width:${pct}%"></div></div><div class="goal-stats"><span>Acumulado: ${fmt(g.current)}</span><span>${done?'🎉 ¡Completado!':'Faltan '+fmt(remaining)}</span><span>${pct}%</span></div></div><div class="goal-actions"><button class="btn-goal-add" onclick="addToGoal('${g.id}')">＋ Agregar ahorro</button></div></div>`;
+    html+=`<div class="goal-card"><div class="goal-header"><div class="goal-ava">${esc(g.emoji)}</div><div><div class="goal-name">${esc(g.name)} ${done?'✅':''}</div><div class="goal-target">Meta: ${fmt(g.target)}</div></div><div style="margin-left:auto;display:flex;gap:5px"><button class="btn-ico edit" onclick="openGoalModal('${g.id}')">✏️</button><button class="btn-ico del" onclick="deleteGoal('${g.id}')">🗑️</button></div></div><div class="goal-progress"><div class="goal-bar"><div class="goal-fill ${done?'done':''}" style="width:${pct}%"></div></div><div class="goal-stats"><span>Acumulado: ${fmt(g.current)}</span><span>${done?'🎉 ¡Completado!':'Faltan '+fmt(remaining)}</span><span>${pct}%</span></div></div><div class="goal-actions"><button class="btn-goal-add" onclick="addToGoal('${g.id}')">＋ Agregar ahorro</button></div></div>`;
   });
   el.innerHTML=html;
 }
