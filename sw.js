@@ -1,7 +1,11 @@
-const CACHE = 'gastos-v2';
+const CACHE = 'gastos-v3';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
+  '/AppGastos/icons/icon-192.png',
+  '/AppGastos/icons/icon-512.png',
+  '/AppGastos/icons/icon-maskable-512.png',
+  '/AppGastos/icons/apple-touch-icon.png',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
   'https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js',
