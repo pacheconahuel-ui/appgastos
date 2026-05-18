@@ -2435,6 +2435,30 @@ function toggleTheme(){
   const light=document.body.classList.toggle('light');
   document.getElementById('btn-theme').textContent=light?'☀️':'🌙';
   localStorage.setItem('gp_theme',light?'light':'dark');
+  // Actualizar colores de todos los charts activos con el nuevo tema
+  const ct=getChartTheme();
+  if(typeof chart!=='undefined'&&chart){
+    chart.options.plugins.legend.labels.color=ct.legendColor;
+    chart.options.plugins.tooltip.backgroundColor=ct.tooltipBg;
+    chart.data.datasets[0].borderColor=ct.sliceBorder;
+    chart.update();
+  }
+  if(typeof monthlyChart!=='undefined'&&monthlyChart){
+    monthlyChart.options.plugins.legend.labels.color=ct.legendColor;
+    monthlyChart.options.plugins.tooltip.backgroundColor=ct.tooltipBg;
+    monthlyChart.options.scales.x.ticks.color=ct.tickColor;
+    monthlyChart.options.scales.y.ticks.color=ct.tickColor;
+    monthlyChart.options.scales.y.grid.color=ct.gridColor;
+    monthlyChart.update();
+  }
+  if(typeof tcChart!=='undefined'&&tcChart){
+    tcChart.options.plugins.legend.labels.color=ct.legendColor;
+    tcChart.options.plugins.tooltip.backgroundColor=ct.tooltipBg;
+    tcChart.options.scales.x.ticks.color=ct.tickColor;
+    tcChart.options.scales.y.ticks.color=ct.tickColor;
+    tcChart.options.scales.y.grid.color=ct.gridColor;
+    tcChart.update();
+  }
 }
 function loadTheme(){
   const t=localStorage.getItem('gp_theme');
