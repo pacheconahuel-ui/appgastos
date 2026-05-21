@@ -13,7 +13,7 @@
   </script>
   <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · v1.13</title>
+  <title>Mis Gastos · v1.14</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7C5CFA" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -470,6 +470,50 @@
     ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
     @media(min-width:560px){.modal{border-radius:26px;margin-bottom:20px}}
 
+    /* PROFILE BUTTON */
+    .btn-profile{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(102,126,234,.15),rgba(118,75,162,.15));border:1px solid rgba(102,126,234,.25);border-radius:20px;padding:5px 11px 5px 5px;font-size:13px;font-weight:600;color:var(--p1);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;max-width:165px;overflow:hidden}
+    .btn-profile:hover{background:linear-gradient(135deg,rgba(102,126,234,.25),rgba(118,75,162,.25));border-color:rgba(102,126,234,.45)}
+    .profile-avatar-ico{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--p1),var(--p2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;line-height:1}
+    .profile-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+
+    /* PROFILE PANEL */
+    .profile-user-card{background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(118,75,162,.10));border:1px solid rgba(102,126,234,.25);border-radius:18px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+    .profile-user-ava{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--p1),var(--p2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-.02em}
+    .profile-user-info{flex:1;min-width:0}
+    .profile-user-name{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile-user-email{font-size:12px;color:var(--txt3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile-sec-lbl{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+    .profile-sec-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+    .profile-action-row{width:100%;padding:13px 15px;background:var(--surf);border:1px solid var(--bdr);border-radius:13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:10px;margin-bottom:8px;transition:all .18s;text-align:left}
+    .profile-action-row:hover{background:var(--surf2);border-color:var(--bdr2)}
+    .profile-action-row .par-ico{font-size:18px;width:26px;text-align:center;flex-shrink:0}
+    .profile-action-row .par-chevron{margin-left:auto;font-size:13px;color:var(--txt3)}
+
+    /* PROFILE CATEGORY LIST */
+    .pcats-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+    .pcat-item{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;transition:all .18s}
+    .pcat-ico{font-size:20px;width:30px;text-align:center;flex-shrink:0}
+    .pcat-name{flex:1;font-size:14px;font-weight:500}
+    .pcat-name.hidden-cat{color:var(--txt3);text-decoration:line-through}
+    .pcat-actions{display:flex;gap:5px}
+    .pcat-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s}
+    .pcat-btn.edit:hover{background:rgba(102,126,234,.12);color:var(--p1);border-color:rgba(102,126,234,.3)}
+    .pcat-btn.hide:hover{background:rgba(244,63,94,.10);color:var(--red);border-color:rgba(244,63,94,.28)}
+    .pcat-btn.show:hover{background:rgba(34,197,94,.10);color:var(--green);border-color:rgba(34,197,94,.28)}
+    .pcat-btn.del:hover{background:rgba(248,113,113,.15);color:var(--red);border-color:rgba(248,113,113,.3)}
+    .pcat-add-btn{width:100%;padding:11px;background:transparent;border:1px dashed var(--bdr2);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;margin-bottom:8px}
+    .pcat-add-btn:hover{border-color:var(--p1);color:var(--p1)}
+
+    /* ICON PICKER */
+    .icon-picker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:8px;max-height:200px;overflow-y:auto}
+    .icon-btn{width:100%;aspect-ratio:1;border-radius:11px;border:2px solid transparent;background:var(--surf);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+    .icon-btn:hover{background:var(--surf2)}
+    .icon-btn.selected{border-color:var(--p1);background:rgba(102,126,234,.15)}
+
+    /* VER MÁS BUTTON */
+    .ver-mas-btn{width:100%;padding:12px;background:transparent;border:1px dashed var(--bdr2);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+    .ver-mas-btn:hover{background:var(--surf);color:var(--p1);border-color:var(--p1);border-style:solid}
+
     /* ════ DESKTOP LAYOUT ════ */
     @media(min-width:900px){
       body{overflow-x:hidden}
@@ -568,7 +612,7 @@
     <button onclick="sendMagicLink()" style="width:100%;padding:13px;background:transparent;border:1px solid var(--bdr2);border-radius:14px;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .2s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">✉️ Enviar link mágico al email</button>
     <div id="magic-link-sent" style="display:none;font-size:12px;color:var(--green);margin-top:8px;text-align:center">✅ ¡Link enviado! Revisá tu email.</div>
     <div class="login-toggle" onclick="toggleRegister()">¿No tenés cuenta? <span id="toggle-txt">Registrarse</span></div>
-    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.13</div>
+    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.14</div>
   </div>
 </div>
 
@@ -581,13 +625,16 @@
     </div>
     <div class="hdr-right">
       <div class="hdr-user">
-        <div class="hdr-badge" id="hdr-badge">—</div>
+        <button class="btn-profile" id="btn-profile" onclick="openProfilePanel()" title="Perfil y configuración">
+          <div class="profile-avatar-ico" id="profile-avatar-ico">?</div>
+          <span id="hdr-badge" class="profile-name">—</span>
+        </button>
         <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
         <button class="btn-theme" onclick="openGlobalSearch()" title="Búsqueda global">🔍</button>
         <button class="btn-theme" id="btn-install" onclick="triggerInstall()" title="Instalar app" style="display:none">📲</button>
         <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
       </div>
-      <span class="app-ver">v1.13</span>
+      <span class="app-ver">v1.14</span>
       <div class="sync-pill connecting" id="sync-pill">
         <div class="dot"></div><span id="sync-label">Conectando…</span>
       </div>
@@ -1163,6 +1210,37 @@
   </div>
 </div>
 
+<!-- PROFILE PANEL -->
+<div class="m-overlay" id="profile-overlay" onclick="profileOverlayClick(event)">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;padding-bottom:56px">
+    <div class="m-handle"></div>
+    <div id="profile-panel-body"></div>
+    <button class="btn-cancel" onclick="closeProfilePanel()" style="margin-top:4px">Cerrar</button>
+  </div>
+</div>
+
+<!-- CAT EDIT MODAL -->
+<div class="m-overlay" id="cat-edit-overlay" onclick="catEditOverlayClick(event)">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <div class="m-title" id="cat-edit-title">✏️ Editar categoría</div>
+    <input type="hidden" id="cat-edit-old-name">
+    <div class="f-grp">
+      <label class="f-lbl">Ícono y nombre</label>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+        <div id="cat-edit-icon-preview" style="font-size:32px;width:50px;height:50px;border-radius:14px;border:1px solid var(--bdr2);background:var(--surf);display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+        <input type="text" class="f-ctrl" id="cat-edit-name" placeholder="Nombre de la categoría" style="flex:1">
+      </div>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Elegir ícono</label>
+      <div class="icon-picker-grid" id="icon-picker-grid"></div>
+    </div>
+    <button class="btn-save" onclick="saveCatEdit()">💾 Guardar</button>
+    <button class="btn-cancel" onclick="closeCatEdit()">Cancelar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1420,7 +1498,13 @@ function initFirebase(){
 function showApp(user){
   document.getElementById('login-screen').classList.toggle('hidden',!!user);
   document.getElementById('app').classList.toggle('hidden',!user);
-  if(user){document.getElementById('hdr-badge').textContent=user.displayName||user.email?.split('@')[0]||'Usuario';loadTheme();}
+  if(user){
+    const uname=user.displayName||user.email?.split('@')[0]||'Usuario';
+    document.getElementById('hdr-badge').textContent=uname;
+    const initials=uname.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'U';
+    document.getElementById('profile-avatar-ico').textContent=initials;
+    loadTheme();
+  }
 }
 
 /* ══════════════════════════════════
@@ -1461,16 +1545,8 @@ function toggleHideCat(cat){
 }
 
 function editCatIcon(catName){
-  const current=catIcon(catName);
-  const newIco=prompt(`Cambiar ícono de "${catName}"\nActual: ${current}\n\nPegá un emoji nuevo:`,current);
-  if(!newIco?.trim()||newIco.trim()===current)return;
-  const t=newIco.trim();
-  const ov=loadIconOverrides();
-  ov[catName]=t;
-  saveIconOverrides(ov);
-  renderCatManager();
-  renderAll();
-  toast(`✅ Ícono de "${catName}" cambiado a ${t}`);
+  // Opens the visual cat edit modal (icon + name together)
+  openCatEdit(catName);
 }
 
 function confirmDeleteCat(name){
@@ -1529,8 +1605,10 @@ function renderDashboard(){
   renderBudgetsSection();
   renderGoalsSection();
   renderStats(mk);
-  const recent=[...expenses].filter(e=>monthKey(e.date)===mk).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt).slice(0,5);
-  document.getElementById('recent-list').innerHTML=recent.length?recent.map(e=>expHTML(e,false)).join(''):'<div class="empty"><div class="empty-ico">📭</div><p>Sin gastos este mes</p></div>';
+  const allThisMonth=[...expenses].filter(e=>monthKey(e.date)===mk);
+  const recent=allThisMonth.sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt).slice(0,5);
+  const verMas=allThisMonth.length>0?`<button class="ver-mas-btn" onclick="switchTab('lista')">📋 Ver todos los movimientos (${allThisMonth.length}) →</button>`:'';
+  document.getElementById('recent-list').innerHTML=(recent.length?recent.map(e=>expHTML(e,false)).join(''):'<div class="empty"><div class="empty-ico">📭</div><p>Sin gastos este mes</p></div>')+verMas;
 }
 
 function getChartTheme(){
@@ -2063,6 +2141,170 @@ function addCatPrompt(){
 function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
 function catOverlayClick(ev){if(ev.target===document.getElementById('cat-overlay'))closeCatManager();}
+
+/* ══════════════════════════════════
+   PRESET ICONS FOR PICKER
+══════════════════════════════════ */
+const PRESET_ICONS=['🛒','🍔','🚗','🏠','💊','🎬','👕','✈️','🎮','📚','💪','🍕','☕','🍺','🎵','💄','🐶','⚽','🎾','🏊','💡','📱','🛍️','🌟','💰','🎁','🏋️','🧴','💅','🎂','🏥','🍷','🐱','🌮','💻','⛽','🧹','🌿','🎯','🎪','🍦','🎨','🏖️','🚴','🏫','💈','🎻','🥗','🧺','🛠️','🐾'];
+
+/* ══════════════════════════════════
+   PROFILE PANEL
+══════════════════════════════════ */
+let _profileUser=null;
+function openProfilePanel(){
+  _profileUser=auth?.currentUser||null;
+  renderProfilePanel();
+  document.getElementById('profile-overlay').classList.add('on');
+  history.pushState({pwa:1},'');
+}
+function closeProfilePanel(){
+  document.getElementById('profile-overlay').classList.remove('on');
+}
+function profileOverlayClick(ev){
+  if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();
+}
+function renderProfilePanel(){
+  const user=_profileUser;
+  const name=user?.displayName||user?.email?.split('@')[0]||'Usuario';
+  const email=user?.email||'';
+  const initials=name.split(' ').filter(Boolean).map(w=>w[0]).join('').substring(0,2).toUpperCase()||'U';
+  const hidden=loadHiddenCats();
+
+  // Build category rows
+  const custom=customCats();
+  const activeDefs=DEF_CATS.filter(c=>cats.includes(c));
+  let catRows='';
+  function pCatRow(c,isCustom){
+    const isHid=hidden.includes(c);
+    const delBtn=`<button class="pcat-btn del" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>`;
+    return`<div class="pcat-item${isHid?' cat-hidden':''}">
+      <div class="pcat-ico">${catIcon(c)}</div>
+      <div class="pcat-name${isHid?' hidden-cat':''}">${esc(c)}</div>
+      <div class="pcat-actions">
+        <button class="pcat-btn edit" onclick="openCatEdit('${esc(c)}')" title="Editar">✏️</button>
+        <button class="pcat-btn ${isHid?'show':'hide'}" onclick="toggleHideCat('${esc(c)}');renderProfilePanel()" title="${isHid?'Mostrar':'Ocultar'}">${isHid?'👁️':'🚫'}</button>
+        ${delBtn}
+      </div>
+    </div>`;
+  }
+  if(custom.length>0){
+    catRows+=`<div class="cat-section-lbl">Personalizadas</div>`;
+    custom.forEach(c=>{catRows+=pCatRow(c,true);});
+  }
+  if(activeDefs.length>0){
+    catRows+=`<div class="cat-section-lbl" style="margin-top:${custom.length?'12px':'0'}">Predefinidas</div>`;
+    activeDefs.forEach(c=>{catRows+=pCatRow(c,false);});
+  }
+  if(!custom.length&&!activeDefs.length){
+    catRows=`<div class="empty" style="padding:16px 0"><div class="empty-ico">🏷️</div><p>Sin categorías</p></div>`;
+  }
+
+  const isDark=!document.body.classList.contains('light');
+  const hasInstallBtn=document.getElementById('btn-install')?.style.display!=='none';
+  const installRow=hasInstallBtn
+    ?`<button class="profile-action-row" onclick="triggerInstall();closeProfilePanel()"><span class="par-ico">📲</span>Instalar app<span class="par-chevron">›</span></button>`
+    :`<button class="profile-action-row" onclick="openInstallModal()"><span class="par-ico">📲</span>Instalar / Compartir app<span class="par-chevron">›</span></button>`;
+
+  document.getElementById('profile-panel-body').innerHTML=`
+    <div class="m-title" style="margin-bottom:14px">👤 Perfil</div>
+    <div class="profile-user-card">
+      <div class="profile-user-ava">${initials}</div>
+      <div class="profile-user-info">
+        <div class="profile-user-name">${esc(name)}</div>
+        ${email?`<div class="profile-user-email">${esc(email)}</div>`:''}
+      </div>
+    </div>
+
+    <div class="profile-sec-lbl">Categorías</div>
+    <div class="pcats-list">${catRows}</div>
+    <button class="pcat-add-btn" onclick="addCatFromProfile()">＋ Nueva categoría</button>
+
+    <div class="profile-sec-lbl">Configuración</div>
+    <button class="profile-action-row" onclick="toggleTheme();renderProfilePanel()">
+      <span class="par-ico">${isDark?'☀️':'🌙'}</span>Modo ${isDark?'claro':'oscuro'}
+      <span class="par-chevron">›</span>
+    </button>
+    ${installRow}
+    <button class="profile-action-row" style="color:var(--red);border-color:rgba(248,113,113,.2);margin-top:4px" onclick="doLogout()">
+      <span class="par-ico">⏏</span>Cerrar sesión
+    </button>
+  `;
+}
+
+function addCatFromProfile(){
+  const name=prompt('Nombre de la nueva categoría:');
+  if(!name?.trim())return;
+  const t=name.trim();
+  if(cats.includes(t)){toast('⚠️ Ya existe');return;}
+  cats.push(t);saveLocal();buildCatSelect();renderAll();
+  renderProfilePanel();
+  toast(`✅ Categoría "${t}" creada`);
+}
+
+/* ══════════════════════════════════
+   CAT EDIT MODAL (nombre + ícono visual)
+══════════════════════════════════ */
+let _catEditSelectedIcon=null;
+function openCatEdit(catName){
+  const currentIcon=catIcon(catName);
+  _catEditSelectedIcon=currentIcon;
+  document.getElementById('cat-edit-old-name').value=catName;
+  document.getElementById('cat-edit-name').value=catName;
+  document.getElementById('cat-edit-icon-preview').textContent=currentIcon;
+  document.getElementById('cat-edit-title').textContent=`✏️ Editar categoría`;
+  // Build icon grid — current icon first, then presets (dedup)
+  const allIcons=[...new Set([currentIcon,...PRESET_ICONS])];
+  document.getElementById('icon-picker-grid').innerHTML=allIcons.map(ic=>`<button class="icon-btn${ic===currentIcon?' selected':''}" onclick="selectCatIcon('${ic}')">${ic}</button>`).join('');
+  document.getElementById('cat-edit-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('cat-edit-name').focus(),250);
+}
+function selectCatIcon(ico){
+  _catEditSelectedIcon=ico;
+  document.getElementById('cat-edit-icon-preview').textContent=ico;
+  document.querySelectorAll('#icon-picker-grid .icon-btn').forEach(b=>{
+    b.classList.toggle('selected',b.textContent.trim()===ico);
+  });
+}
+function closeCatEdit(){
+  document.getElementById('cat-edit-overlay').classList.remove('on');
+  _catEditSelectedIcon=null;
+}
+function catEditOverlayClick(ev){
+  if(ev.target===document.getElementById('cat-edit-overlay'))closeCatEdit();
+}
+function saveCatEdit(){
+  const oldName=document.getElementById('cat-edit-old-name').value;
+  const newName=document.getElementById('cat-edit-name').value.trim();
+  if(!newName){toast('⚠️ Escribí un nombre');return;}
+  // Update icon override
+  const currentIcon=catIcon(oldName);
+  if(_catEditSelectedIcon&&_catEditSelectedIcon!==currentIcon){
+    const ov=loadIconOverrides();
+    ov[newName]=_catEditSelectedIcon;
+    if(newName!==oldName)delete ov[oldName];
+    saveIconOverrides(ov);
+  } else if(newName!==oldName){
+    // Move icon override key to new name if renaming
+    const ov=loadIconOverrides();
+    if(ov[oldName]){ov[newName]=ov[oldName];delete ov[oldName];saveIconOverrides(ov);}
+  }
+  // Rename if needed
+  if(newName!==oldName){
+    if(cats.includes(newName)){toast('⚠️ Ya existe una categoría con ese nombre');return;}
+    const idx=cats.indexOf(oldName);
+    if(idx>-1)cats[idx]=newName;
+    expenses=expenses.map(e=>e.category===oldName?{...e,category:newName}:e);
+    saveLocal();
+    expenses.filter(e=>e.category===newName).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
+  } else {
+    saveLocal();
+  }
+  buildCatSelect();renderAll();
+  if(document.getElementById('cat-overlay')?.classList.contains('on'))renderCatManager();
+  closeCatEdit();
+  if(document.getElementById('profile-overlay')?.classList.contains('on'))renderProfilePanel();
+  toast(`✅ "${oldName}"${newName!==oldName?' → "'+newName+'"':''} actualizado`);
+}
 function renderCatManager(){
   const custom=customCats();const hidden=loadHiddenCats();let html='';
   // Personalizadas
@@ -2090,12 +2332,8 @@ function renderCatManager(){
   document.getElementById('cat-manager-body').innerHTML=html;
 }
 function renameCat(oldName){
-  const newName=prompt(`Renombrar "${oldName}" a:`,oldName);if(!newName?.trim()||newName.trim()===oldName)return;
-  const t=newName.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  const idx=cats.indexOf(oldName);if(idx>-1)cats[idx]=t;
-  expenses=expenses.map(e=>e.category===oldName?{...e,category:t}:e);
-  saveLocal();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
-  buildCatSelect();renderCatManager();renderAll();toast(`✅ "${oldName}" → "${t}"`);
+  // Use visual editor (opens cat-edit overlay)
+  openCatEdit(oldName);
 }
 
 /* ══════════════════════════════════
@@ -2372,7 +2610,9 @@ async function doDelete(){
   const{type,id,name}=pendingDel;closeConf();
   if(type==='cat'){
     haptic([30,30,60]);
-    cats=cats.filter(c=>c!==name);saveLocal();buildCatSelect();renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
+    cats=cats.filter(c=>c!==name);saveLocal();buildCatSelect();renderCatManager();
+    if(document.getElementById('profile-overlay')?.classList.contains('on'))renderProfilePanel();
+    toast(`🗑️ Categoría "${name}" eliminada`);
     return;
   }
   if(type==='contact'){
@@ -2946,7 +3186,15 @@ window.addEventListener('appinstalled',()=>{
     if(document.getElementById('gsearch-overlay')?.classList.contains('on')){
       closeGlobalSearch();history.pushState({pwa:1},'');return;
     }
-    // 3. Cerrar gestor de categorías
+    // 3. Cerrar cat edit overlay
+    if(document.getElementById('cat-edit-overlay')?.classList.contains('on')){
+      closeCatEdit();history.pushState({pwa:1},'');return;
+    }
+    // 4a. Cerrar perfil panel
+    if(document.getElementById('profile-overlay')?.classList.contains('on')){
+      closeProfilePanel();history.pushState({pwa:1},'');return;
+    }
+    // 4b. Cerrar gestor de categorías
     if(document.getElementById('cat-overlay')?.classList.contains('on')){
       closeCatManager();history.pushState({pwa:1},'');return;
     }
