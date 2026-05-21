@@ -2,6 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <!-- Aplicar tema ANTES de renderizar para evitar flash de color incorrecto -->
+  <script>
+    (function(){
+      var saved=localStorage.getItem('gp_theme');
+      var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var light=saved==='light'||(saved===null&&!prefersDark);
+      if(light)document.documentElement.classList.add('pre-light');
+    })();
+  </script>
+  <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Gastos · v1.13</title>
   <link rel="manifest" href="manifest.json">
@@ -770,12 +780,12 @@
       </div>
     </div>
     <div class="f-grp">
-      <label class="f-lbl">Descripción</label>
-      <input type="text" class="f-ctrl" id="f-desc" placeholder="ej: Coto, Padel martes…">
+      <label class="f-lbl" style="display:flex;justify-content:space-between">Descripción<span id="desc-count" style="font-weight:400;opacity:.5"></span></label>
+      <input type="text" class="f-ctrl" id="f-desc" placeholder="ej: Coto, Padel martes…" maxlength="300" oninput="document.getElementById('desc-count').textContent=this.value.length?this.value.length+'/300':''">
     </div>
     <div class="f-grp">
-      <label class="f-lbl">Notas (opcional)</label>
-      <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5"></textarea>
+      <label class="f-lbl" style="display:flex;justify-content:space-between">Notas <span style="font-weight:400;opacity:.5">(opcional)</span><span id="notes-count" style="font-weight:400;opacity:.5"></span></label>
+      <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5" maxlength="500" oninput="document.getElementById('notes-count').textContent=this.value.length?this.value.length+'/500':''"></textarea>
     </div>
     <div class="f-grp">
       <label class="f-lbl">Monto total ($)</label>
@@ -1130,7 +1140,8 @@
     <div class="m-handle"></div>
     <div class="m-title">📲 Instalar Mis Gastos</div>
     <div id="install-modal-body"></div>
-    <button class="btn-cancel" onclick="closeInstallModal()" style="margin-top:16px">Cerrar</button>
+    <button id="btn-share-app" onclick="shareApp()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--p1),var(--p2));border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:16px;display:none">🔗 Compartir link de la app</button>
+    <button class="btn-cancel" onclick="closeInstallModal()" style="margin-top:8px">Cerrar</button>
   </div>
 </div>
 
@@ -1993,6 +2004,8 @@ function openModal(data){
   document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
   document.getElementById('f-desc').value=data?.description||'';
   document.getElementById('f-notes').value=data?.notes||'';
+  document.getElementById('desc-count').textContent=data?.description?data.description.length+'/300':'';
+  document.getElementById('notes-count').textContent=data?.notes?data.notes.length+'/500':'';
   document.getElementById('f-amt').value=data?.amount||'';
   document.getElementById('f-recur').checked=data?.recurring||false;
   setType(data?.type||'Egreso');
@@ -2472,8 +2485,24 @@ function toggleTheme(){
   }
 }
 function loadTheme(){
-  const t=localStorage.getItem('gp_theme');
-  if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').textContent='☀️';}
+  const saved=localStorage.getItem('gp_theme');
+  const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const light=saved==='light'||(saved===null&&!prefersDark);
+  // Limpiar clase de pre-render en <html>
+  document.documentElement.classList.remove('pre-light');
+  if(light){document.body.classList.add('light');document.getElementById('btn-theme').textContent='☀️';}
+  // Escuchar cambios del SO en tiempo real (solo si no hay preferencia guardada)
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
+    if(!localStorage.getItem('gp_theme')){
+      const nowLight=!e.matches;
+      document.body.classList.toggle('light',nowLight);
+      document.getElementById('btn-theme').textContent=nowLight?'☀️':'🌙';
+      const ct=getChartTheme();
+      if(typeof chart!=='undefined'&&chart){chart.options.plugins.legend.labels.color=ct.legendColor;chart.data.datasets[0].borderColor=ct.sliceBorder;chart.update();}
+      if(typeof monthlyChart!=='undefined'&&monthlyChart){monthlyChart.options.plugins.legend.labels.color=ct.legendColor;monthlyChart.options.scales.x.ticks.color=ct.tickColor;monthlyChart.options.scales.y.ticks.color=ct.tickColor;monthlyChart.options.scales.y.grid.color=ct.gridColor;monthlyChart.update();}
+      if(typeof tcChart!=='undefined'&&tcChart){tcChart.options.scales.x.ticks.color=ct.tickColor;tcChart.options.scales.y.ticks.color=ct.tickColor;tcChart.options.scales.y.grid.color=ct.gridColor;tcChart.update();}
+    }
+  });
 }
 
 /* ══════════════════════════════════
@@ -2797,9 +2826,21 @@ function openInstallModal(){
           </div>
         </div>
       </div>`;
+  // Mostrar botón de compartir si el navegador lo soporta o como fallback
+  const shareBtn=document.getElementById('btn-share-app');
+  if(shareBtn)shareBtn.style.display='block';
   document.getElementById('install-overlay').classList.add('on');
 }
 function closeInstallModal(){document.getElementById('install-overlay').classList.remove('on');}
+async function shareApp(){
+  const url='https://pacheconahuel-ui.github.io/AppGastos/';
+  if(navigator.share){
+    try{await navigator.share({title:'Mis Gastos',text:'📲 Instalate esta app para manejar tus gastos',url});return;}catch(e){}
+  }
+  // Fallback: copiar al portapapeles
+  try{await navigator.clipboard.writeText(url);toast('✅ Link copiado al portapapeles');}
+  catch{prompt('Copiá este link:',url);}
+}
 
 document.getElementById('pwa-install-btn')?.addEventListener('click',async()=>{
   if(!_pwaPrompt)return;
