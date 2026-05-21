@@ -364,6 +364,14 @@
     #pwa-banner .pwa-install{background:var(--grad-p);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0}
     #pwa-banner .pwa-close{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--txt3);cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
     #pwa-banner .pwa-close:hover{background:var(--surf2);color:var(--txt)}
+    /* NOTIF PERMISSION CARD */
+    .notif-card{background:linear-gradient(135deg,rgba(124,92,250,.10),rgba(91,63,209,.06));border:1px solid rgba(124,92,250,.25);border-radius:16px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+    .notif-card-ico{font-size:26px;flex-shrink:0}
+    .notif-card-txt{flex:1}
+    .notif-card-txt strong{font-size:13px;font-weight:700;color:var(--txt);display:block}
+    .notif-card-txt span{font-size:12px;color:var(--txt2)}
+    .notif-card-btn{background:var(--grad-p);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0}
+    .notif-card-x{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--txt3);cursor:pointer;font-size:14px;flex-shrink:0;padding:0}
     /* MIGRATION */
     .mig-banner{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.08));border:1px solid rgba(251,191,36,.3);border-radius:16px;padding:16px;margin:16px 20px 0;display:none;align-items:flex-start;gap:12px}
     .mig-banner.on{display:flex}
@@ -626,6 +634,16 @@
       <div class="stat-card"><div class="stat-val" id="st-rate" style="color:var(--green)">—</div><div class="stat-lbl">Tasa de ahorro</div></div>
       <div class="stat-card"><div class="stat-val" id="st-daily" style="color:var(--yellow)">—</div><div class="stat-lbl">Gasto diario prom.</div></div>
       <div class="stat-card"><div class="stat-val" id="st-topcat" style="color:var(--p1)">—</div><div class="stat-lbl">Mayor categoría</div></div>
+    </div>
+    <!-- Notif permission card -->
+    <div id="notif-card" style="display:none" class="notif-card">
+      <div class="notif-card-ico">🔔</div>
+      <div class="notif-card-txt">
+        <strong>Activar recordatorios</strong>
+        <span>Te avisamos cuando hay gastos recurrentes pendientes</span>
+      </div>
+      <button class="notif-card-btn" onclick="requestNotifPermission()">Activar</button>
+      <button class="notif-card-x" onclick="dismissNotifCard()" title="No, gracias">✕</button>
     </div>
     <!-- Recurring reminders -->
     <div id="recurring-reminders"></div>
@@ -1392,6 +1410,8 @@ function initFirebase(){
       if(user){
         currentUID=user.uid;loadLocal();renderAll();attachListeners();showApp(user);
         setTimeout(checkMigration,1500);
+        setTimeout(initNotifCard,2000);
+        setTimeout(checkAndNotifyRecurring,3000);
       }else showApp(null);
     });
   }catch(e){console.error('[Firebase] Init failed:',e);setStatus('offline','⚠ Sin Firebase');fbReady=true;showApp(null);}
@@ -2555,6 +2575,53 @@ function exportCSV(){
   a.href=url; a.download=`gastos_${mk}.csv`; a.click();
   URL.revokeObjectURL(url);
   toast('📥 CSV descargado');
+}
+
+/* ══════════════════════════════════
+   NOTIFICATIONS
+══════════════════════════════════ */
+function initNotifCard(){
+  if(!('Notification' in window))return; // browser no soporta
+  const perm=Notification.permission;
+  const dismissed=localStorage.getItem('notif_card_dismissed');
+  if(perm==='granted'||perm==='denied'||dismissed)return;
+  // Mostrar card 8 segundos después del login (no ser invasivo)
+  setTimeout(()=>document.getElementById('notif-card').style.display='flex',8000);
+}
+async function requestNotifPermission(){
+  document.getElementById('notif-card').style.display='none';
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    toast('✅ Recordatorios activados');
+    checkAndNotifyRecurring();
+  }else{
+    toast('❌ Permiso denegado — podés activarlo desde la config del browser');
+  }
+}
+function dismissNotifCard(){
+  document.getElementById('notif-card').style.display='none';
+  localStorage.setItem('notif_card_dismissed','1');
+}
+
+function checkAndNotifyRecurring(){
+  if(Notification.permission!=='granted')return;
+  const mk=nowKey();
+  const prevMk=getPrevMonth(mk);
+  const templates=expenses.filter(e=>e.recurring&&monthKey(e.date)===prevMk);
+  const thisDescs=new Set(expenses.filter(e=>monthKey(e.date)===mk).map(e=>e.description));
+  const missing=templates.filter(e=>!thisDescs.has(e.description));
+  if(!missing.length)return;
+  const lastNotif=localStorage.getItem('notif_last_'+mk);
+  if(lastNotif)return; // ya notificamos este mes
+  localStorage.setItem('notif_last_'+mk,'1');
+  const body=missing.length===1
+    ?`"${missing[0].description}" — ${fmt(missing[0].amount)} todavía no fue registrado este mes`
+    :`${missing.length} gastos recurrentes pendientes: ${missing.map(e=>e.description).join(', ')}`;
+  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'SHOW_NOTIF',title:'💸 Mis Gastos — Recordatorio',body,tag:'recurring-'+mk});
+  }else{
+    new Notification('💸 Mis Gastos — Recordatorio',{body,icon:'/AppGastos/icons/icon-192.png',badge:'/AppGastos/icons/icon-192.png',tag:'recurring-'+mk});
+  }
 }
 
 /* ══════════════════════════════════

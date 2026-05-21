@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v3';
+const CACHE = 'gastos-v4';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
@@ -30,6 +30,32 @@ self.addEventListener('activate', e => {
     )
   );
   self.clients.claim();
+});
+
+// Mensaje desde la app para mostrar notificación
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SHOW_NOTIF') {
+    self.registration.showNotification(e.data.title, {
+      body: e.data.body,
+      icon: '/AppGastos/icons/icon-192.png',
+      badge: '/AppGastos/icons/icon-192.png',
+      tag: e.data.tag || 'gastos-notif',
+      vibrate: [100, 50, 100],
+      data: { url: '/AppGastos/' }
+    });
+  }
+});
+
+// Click en notificación → abrir/enfocar la app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const appClient = list.find(c => c.url.includes('/AppGastos'));
+      if (appClient) return appClient.focus();
+      return clients.openWindow('/AppGastos/');
+    })
+  );
 });
 
 self.addEventListener('fetch', e => {
