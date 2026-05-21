@@ -2857,7 +2857,7 @@ function renderCuentasTab(){
   document.getElementById('cuentas-transfers-count').textContent=`${mTf.length} transferencia${mTf.length!==1?'s':''}`;
   const tHtml=transfers.length?[...transfers].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).map(t=>{
     const fr=accounts.find(a=>a.id===t.fromId),to=accounts.find(a=>a.id===t.toId);
-    return`<div class="transfer-box"><div style="font-size:20px">${fr?.emoji||'💼'}</div>
+    return`<div class="transfer-box"><div style="font-size:20px">${esc(fr?.emoji||'💼')}</div>
       <div class="exp-info"><div class="exp-desc">${esc(t.description||'Transferencia')}</div><div class="exp-meta">${fmtDate(t.date)} · ${esc(fr?.name||'?')} → ${esc(to?.name||'?')}</div></div>
       <div class="exp-amt e">${fmt(t.amount)}</div>
       <button class="btn-ico del" onclick="deleteTransfer('${t.id}',event)" style="width:28px;height:28px;font-size:12px">🗑️</button></div>`;
