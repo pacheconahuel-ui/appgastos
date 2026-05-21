@@ -13,7 +13,7 @@
   </script>
   <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · v1.14</title>
+  <title>Mis Gastos · v1.15</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7C5CFA" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -510,6 +510,37 @@
     .icon-btn:hover{background:var(--surf2)}
     .icon-btn.selected{border-color:var(--p1);background:rgba(102,126,234,.15)}
 
+    /* CREDIT CARDS */
+    .tab.tarjetas-tab.on{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
+    .card-banner{background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(124,58,237,.08));border:1px solid rgba(168,85,247,.25);border-radius:18px;padding:18px;margin-bottom:14px;overflow:hidden;position:relative}
+    .card-banner-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+    .card-ava{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+    .card-info{flex:1}
+    .card-name{font-size:16px;font-weight:700}
+    .card-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+    .card-month-total{text-align:right}
+    .card-month-lbl{font-size:10px;color:rgba(168,85,247,.8);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+    .card-month-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#a855f7}
+    .card-installments{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+    .inst-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:10px}
+    .inst-row-ico{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+    .inst-row-info{flex:1;min-width:0}
+    .inst-row-desc{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .inst-row-meta{font-size:10px;color:var(--txt3);margin-top:2px}
+    .inst-row-amt{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#a855f7;flex-shrink:0}
+    .inst-row-del{width:26px;height:26px;border-radius:7px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;flex-shrink:0}
+    .inst-row-del:hover{background:rgba(248,113,113,.15);color:var(--red);border-color:rgba(248,113,113,.3)}
+    .btn-pay-card{width:100%;padding:11px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(124,58,237,.12));border:1px solid rgba(168,85,247,.3);border-radius:12px;color:#a855f7;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s}
+    .btn-pay-card:hover{background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(124,58,237,.2))}
+    .btn-pay-card:disabled{opacity:.35;cursor:default}
+    .tarjetas-total{background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(124,58,237,.07));border:1px solid rgba(168,85,247,.2);border-radius:16px;padding:16px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+    .card-actions-row{display:flex;gap:7px;margin-top:10px}
+    .btn-card-edit{padding:7px 12px;border-radius:9px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);font-size:11px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+    .btn-card-edit:hover{background:var(--surf2);color:var(--txt)}
+    .btn-card-del{padding:7px 12px;border-radius:9px;border:1px solid rgba(248,113,113,.2);background:transparent;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+    .btn-card-del:hover{background:rgba(248,113,113,.12)}
+    .card-payment-badge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+
     /* VER MÁS BUTTON */
     .ver-mas-btn{width:100%;padding:12px;background:transparent;border:1px dashed var(--bdr2);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
     .ver-mas-btn:hover{background:var(--surf);color:var(--p1);border-color:var(--p1);border-style:solid}
@@ -612,7 +643,7 @@
     <button onclick="sendMagicLink()" style="width:100%;padding:13px;background:transparent;border:1px solid var(--bdr2);border-radius:14px;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .2s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">✉️ Enviar link mágico al email</button>
     <div id="magic-link-sent" style="display:none;font-size:12px;color:var(--green);margin-top:8px;text-align:center">✅ ¡Link enviado! Revisá tu email.</div>
     <div class="login-toggle" onclick="toggleRegister()">¿No tenés cuenta? <span id="toggle-txt">Registrarse</span></div>
-    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.14</div>
+    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.15</div>
   </div>
 </div>
 
@@ -634,7 +665,7 @@
         <button class="btn-theme" id="btn-install" onclick="triggerInstall()" title="Instalar app" style="display:none">📲</button>
         <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
       </div>
-      <span class="app-ver">v1.14</span>
+      <span class="app-ver">v1.15</span>
       <div class="sync-pill connecting" id="sync-pill">
         <div class="dot"></div><span id="sync-label">Conectando…</span>
       </div>
@@ -647,6 +678,7 @@
     <button class="tab usd-tab"    onclick="switchTab('usd')"><span class="tab-ico">💵</span>USD</button>
     <button class="tab saldos-tab" onclick="switchTab('saldos')"><span class="tab-ico">🤝</span>Saldos</button>
     <button class="tab cuentas-tab" onclick="switchTab('cuentas')"><span class="tab-ico">💼</span>Cuentas</button>
+    <button class="tab tarjetas-tab" onclick="switchTab('tarjetas')"><span class="tab-ico">💳</span>Tarjetas</button>
   </div>
 
   <!-- MIGRATION BANNER -->
@@ -794,6 +826,21 @@
     <div id="transfers-list"></div>
   </div>
 
+  <!-- TARJETAS -->
+  <div class="sec" id="tab-tarjetas">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700;color:var(--txt2)">Mis tarjetas</div>
+      <button onclick="openCardModal()" style="padding:7px 14px;background:rgba(124,92,250,.1);border:1px solid rgba(124,92,250,.25);border-radius:10px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">＋ Tarjeta</button>
+    </div>
+    <!-- Resumen del mes -->
+    <div id="tarjetas-summary"></div>
+    <!-- Lista de tarjetas con sus cuotas -->
+    <div id="tarjetas-list"></div>
+    <!-- Lista de cuotas activas completa -->
+    <div class="div-lbl" style="margin-top:16px">Cuotas activas</div>
+    <div id="installments-list"></div>
+  </div>
+
 </div><!-- /app -->
 
 <!-- PWA Install Banner -->
@@ -814,13 +861,14 @@
   <button class="fab gold-fab hidden" id="fab-usd" onclick="openUsdModal()">💵</button>
   <button class="fab teal-fab hidden" id="fab-debt" onclick="openDebtModal()">💚</button>
   <button class="fab hidden" id="fab-account" onclick="openTransferModal()" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 8px 32px rgba(96,165,250,.35)">⇄</button>
+  <button class="fab hidden" id="fab-install" onclick="openInstallmentModal()" style="background:linear-gradient(135deg,#a855f7,#7c3aed);box-shadow:0 8px 32px rgba(168,85,247,.35)">💳 ＋</button>
 </div>
 
 <!-- MODAL GASTOS ARS -->
 <div class="m-overlay" id="m-overlay" onclick="overlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title" id="m-title">Nuevo Gasto</div>
+    <div class="m-title" id="m-title">Nuevo Registro</div>
     <input type="hidden" id="f-id">
     <div class="f-grp">
       <label class="f-lbl">Tipo</label>
@@ -1233,11 +1281,115 @@
       </div>
     </div>
     <div class="f-grp">
+      <label class="f-lbl">Tipo</label>
+      <div class="type-tog">
+        <button class="type-btn" id="cat-type-btn-egreso" onclick="selectCatType('egreso')">📤 Egreso</button>
+        <button class="type-btn" id="cat-type-btn-ingreso" onclick="selectCatType('ingreso')">📥 Ingreso</button>
+      </div>
+      <input type="hidden" id="cat-edit-type" value="egreso">
+    </div>
+    <div class="f-grp">
       <label class="f-lbl">Elegir ícono</label>
       <div class="icon-picker-grid" id="icon-picker-grid"></div>
     </div>
     <button class="btn-save" onclick="saveCatEdit()">💾 Guardar</button>
     <button class="btn-cancel" onclick="closeCatEdit()">Cancelar</button>
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div class="m-overlay" id="card-overlay" onclick="cardOverlayClick(event)">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <div class="m-title" id="card-modal-title">Nueva tarjeta</div>
+    <input type="hidden" id="card-id">
+    <div class="f-grp" style="text-align:center;margin-bottom:18px">
+      <div id="card-emoji-preview" style="font-size:52px;cursor:pointer;margin-bottom:8px" onclick="pickCardEmoji()">💳</div>
+      <div style="font-size:11px;color:var(--txt3)">Tocá para cambiar</div>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Nombre</label>
+      <input type="text" class="f-ctrl" id="card-name" placeholder="ej: Visa Santander, MC Galicia…">
+    </div>
+    <div class="f-row">
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl">Cierre (día)</label>
+        <input type="number" class="f-ctrl" id="card-closing" placeholder="ej: 15" min="1" max="28" inputmode="numeric">
+      </div>
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl">Vencimiento (día)</label>
+        <input type="number" class="f-ctrl" id="card-due" placeholder="ej: 25" min="1" max="28" inputmode="numeric">
+      </div>
+    </div>
+    <button class="btn-save" style="background:linear-gradient(135deg,#a855f7,#7c3aed);margin-top:16px" onclick="saveCard()">💾 Guardar</button>
+    <button class="btn-cancel" onclick="closeCardModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- INSTALLMENT MODAL -->
+<div class="m-overlay" id="install-modal-overlay" onclick="installModalOverlayClick(event)">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <div class="m-title" id="install-modal-title">Nueva compra en cuotas</div>
+    <input type="hidden" id="inst-id">
+    <div class="f-grp">
+      <label class="f-lbl">Tarjeta</label>
+      <select class="f-ctrl" id="inst-card" style="border-color:rgba(168,85,247,.3)"></select>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Descripción</label>
+      <input type="text" class="f-ctrl" id="inst-desc" placeholder="ej: Heladera Samsung, iPhone 15…" maxlength="200">
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Categoría de gasto</label>
+      <select class="f-ctrl" id="inst-cat"></select>
+    </div>
+    <div class="f-row">
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl">Monto total ($)</label>
+        <input type="number" class="f-ctrl" id="inst-total" placeholder="0" inputmode="decimal" step="any" min="0" oninput="calcInstallmentPreview()">
+      </div>
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl">Cuotas</label>
+        <input type="number" class="f-ctrl" id="inst-qty" placeholder="ej: 12" min="1" max="60" inputmode="numeric" oninput="calcInstallmentPreview()">
+      </div>
+    </div>
+    <div id="inst-preview" style="display:none;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:12px 15px;margin-bottom:12px">
+      <div style="font-size:11px;color:rgba(168,85,247,.8);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Cuota mensual</div>
+      <div id="inst-preview-val" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#a855f7">$0</div>
+      <div id="inst-preview-sub" style="font-size:11px;color:var(--txt3);margin-top:3px"></div>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Mes de inicio</label>
+      <input type="month" class="f-ctrl" id="inst-start">
+    </div>
+    <button class="btn-save" style="background:linear-gradient(135deg,#a855f7,#7c3aed)" onclick="saveInstallment()">💾 Guardar cuota</button>
+    <button class="btn-cancel" onclick="closeInstallmentModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- PAY CARD MODAL -->
+<div class="m-overlay" id="pay-card-overlay" onclick="payCardOverlayClick(event)">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <div class="m-title" id="pay-card-title">💳 Pagar resumen</div>
+    <input type="hidden" id="pay-card-id">
+    <div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:16px;padding:18px;margin-bottom:16px">
+      <div style="font-size:12px;color:rgba(168,85,247,.8);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Total calculado del resumen</div>
+      <div id="pay-card-total" style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:#a855f7">$0</div>
+      <div id="pay-card-detail" style="font-size:12px;color:var(--txt3);margin-top:6px;line-height:1.6"></div>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Monto que vas a pagar ($)</label>
+      <input type="number" class="f-ctrl" id="pay-card-amt" placeholder="0" inputmode="decimal" step="any" min="0">
+      <div style="font-size:11px;color:var(--txt3);margin-top:5px">Podés ajustarlo si hay impuestos, intereses u otros cargos</div>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Fecha del pago</label>
+      <input type="date" class="f-ctrl" id="pay-card-date">
+    </div>
+    <button class="btn-save" style="background:linear-gradient(135deg,#a855f7,#7c3aed)" onclick="confirmPayCard()">✅ Registrar pago como Egreso</button>
+    <button class="btn-cancel" onclick="closePayCardModal()">Cancelar</button>
   </div>
 </div>
 
@@ -1256,6 +1408,12 @@ const SK='gp_expenses_v2',CK='gp_cats_v2',PQ='gp_pending_v2';
 const USK='gp_usd_v1',UPQ='gp_upending_v1';
 const DSK='gp_debts_v1',DPQ='gp_dpending_v1';
 const PSK='gp_persons_v1';
+const CT_SK='gp_cat_types_v1';  // maps catName → 'egreso'|'ingreso'
+const CARDS_SK='gp_cards_v1', INSTALL_SK='gp_installs_v1';
+
+// Default income cats (added to cats[] on first load if not present)
+const DEF_ING_CATS=['Sueldo','Freelance / Honorarios','Comisión','Aguinaldo / Bono','Regalo','Alquiler cobrado','Otros ingresos'];
+const ING_ICONS={'Sueldo':'💼','Freelance / Honorarios':'💻','Comisión':'🤝','Aguinaldo / Bono':'🎁','Regalo':'🎀','Alquiler cobrado':'🏠','Otros ingresos':'💚'};
 
 const DEF_CATS=['Supermercado','Restaurante','Padel','Mascotas','Servicios','Gimnasio','Farmacia','Compras','Salario','Fútbol','Educador Canino','Alquiler','Luz','Gas','Internet','Seguros','Streaming','Zurich','Consultas Médicas','Venta USD','Otro'];
 const ICONS={'Supermercado':'🛒','Restaurante':'🍽️','Padel':'🎾','Mascotas':'🐕','Servicios':'⚡','Gimnasio':'💪','Farmacia':'💊','Compras':'🛍️','Salario':'💰','Fútbol':'⚽','Educador Canino':'🐾','Alquiler':'🏠','Luz':'💡','Gas':'🔥','Internet':'📡','Seguros':'🛡️','Streaming':'🎬','Zurich':'🏥','Consultas Médicas':'🩺','Venta USD':'💵','Otro':'📌'};
@@ -1295,8 +1453,9 @@ function loadLocal(){
   try{debts=JSON.parse(localStorage.getItem(lsKey(DSK)))||[];}catch{debts=[];}
   try{
     const custom=JSON.parse(localStorage.getItem(lsKey(CK)))||[];
-    cats=[...new Set([...DEF_CATS,...custom])];
-  }catch{cats=[...DEF_CATS];}
+    // Merge DEF_CATS + default income cats + custom
+    cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...custom])];
+  }catch{cats=[...DEF_CATS,...DEF_ING_CATS];}
   try{
     const saved=JSON.parse(localStorage.getItem(lsKey(PSK)))||[];
     persons=saved;
@@ -1304,6 +1463,8 @@ function loadLocal(){
   try{pendingQ=JSON.parse(localStorage.getItem(lsKey(PQ)))||[];}catch{pendingQ=[];}
   try{usdPendQ=JSON.parse(localStorage.getItem(lsKey(UPQ)))||[];}catch{usdPendQ=[];}
   try{debtPendQ=JSON.parse(localStorage.getItem(lsKey(DPQ)))||[];}catch{debtPendQ=[];}
+  loadCatTypes();
+  loadCards();
   // Load new modules (safe — functions defined later, called after DOMContentLoaded flow)
   setTimeout(()=>{if(typeof loadAccounts==='function'){loadAccounts();loadBudgets();loadGoals();}},0);
 }
@@ -1314,7 +1475,7 @@ function saveLocal(){
     localStorage.setItem(lsKey(USK),JSON.stringify(usdTx));
     localStorage.setItem(lsKey(DSK),JSON.stringify(debts));
     localStorage.setItem(lsKey(PSK),JSON.stringify(persons));
-    const custom=cats.filter(c=>!DEF_CATS.includes(c));
+    const custom=cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));
     localStorage.setItem(lsKey(CK),JSON.stringify(custom));
     localStorage.setItem(lsKey(PQ),JSON.stringify(pendingQ));
     localStorage.setItem(lsKey(UPQ),JSON.stringify(usdPendQ));
@@ -2097,7 +2258,7 @@ function saveContact(){
    MODAL GASTOS ARS
 ══════════════════════════════════ */
 function openModal(data){
-  document.getElementById('m-title').textContent=data?'Editar Gasto':'Nuevo Gasto';
+  document.getElementById('m-title').textContent=data?'Editar Registro':'Nuevo Registro';
   document.getElementById('f-id').value=data?.id||'';
   document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
   document.getElementById('f-desc').value=data?.description||'';
@@ -2126,21 +2287,46 @@ function setType(t){
   document.getElementById('f-type').value=t;
   document.getElementById('btn-eg').className='type-btn'+(t==='Egreso'?' ae':'');
   document.getElementById('btn-in').className='type-btn'+(t==='Ingreso'?' ai':'');
+  buildCatSelect(); // Rebuild cats filtered for this type
 }
 function buildCatSelect(){
   const hidden=loadHiddenCats();
+  const currentType=document.getElementById('f-type')?.value||'Egreso';
   const sel=document.getElementById('f-cat'),cur=sel.value;
-  sel.innerHTML=cats.filter(c=>!hidden.includes(c)).map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
-  if(cur&&cats.includes(cur)&&!hidden.includes(cur))sel.value=cur;
+  const filtered=cats.filter(c=>{
+    if(hidden.includes(c))return false;
+    const ct=catTypeFor(c);
+    return currentType==='Ingreso'?ct==='ingreso':ct==='egreso';
+  });
+  sel.innerHTML=filtered.map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
+  if(cur&&filtered.includes(cur))sel.value=cur;
 }
 function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  cats.push(t);saveLocal();buildCatSelect();document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada`);
+  // Default type matches current form type
+  const currentType=document.getElementById('f-type')?.value||'Egreso';
+  cats.push(t);setCatType(t,currentType==='Ingreso'?'ingreso':'egreso');
+  saveLocal();buildCatSelect();document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada`);
 }
 function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
 function catOverlayClick(ev){if(ev.target===document.getElementById('cat-overlay'))closeCatManager();}
+
+/* ══════════════════════════════════
+   CATEGORY TYPES (egreso / ingreso)
+══════════════════════════════════ */
+let catTypes={};
+function loadCatTypes(){
+  try{catTypes=JSON.parse(localStorage.getItem(lsKey(CT_SK)))||{};}catch{catTypes={};}
+  // Default income cats to 'ingreso' if not yet set
+  DEF_ING_CATS.forEach(c=>{if(!catTypes[c])catTypes[c]='ingreso';});
+  // 'Salario' from the original DEF_CATS is income
+  if(!catTypes['Salario'])catTypes['Salario']='ingreso';
+}
+function saveCatTypes(){try{localStorage.setItem(lsKey(CT_SK),JSON.stringify(catTypes));}catch{}}
+function catTypeFor(name){return catTypes[name]||(DEF_ING_CATS.includes(name)||name==='Salario'?'ingreso':'egreso');}
+function setCatType(name,type){catTypes[name]=type;saveCatTypes();}
 
 /* ══════════════════════════════════
    PRESET ICONS FOR PICKER
@@ -2170,34 +2356,27 @@ function renderProfilePanel(){
   const initials=name.split(' ').filter(Boolean).map(w=>w[0]).join('').substring(0,2).toUpperCase()||'U';
   const hidden=loadHiddenCats();
 
-  // Build category rows
-  const custom=customCats();
-  const activeDefs=DEF_CATS.filter(c=>cats.includes(c));
-  let catRows='';
-  function pCatRow(c,isCustom){
+  // Build category rows grouped by type
+  function pCatRow(c){
     const isHid=hidden.includes(c);
-    const delBtn=`<button class="pcat-btn del" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>`;
     return`<div class="pcat-item${isHid?' cat-hidden':''}">
       <div class="pcat-ico">${catIcon(c)}</div>
       <div class="pcat-name${isHid?' hidden-cat':''}">${esc(c)}</div>
       <div class="pcat-actions">
         <button class="pcat-btn edit" onclick="openCatEdit('${esc(c)}')" title="Editar">✏️</button>
         <button class="pcat-btn ${isHid?'show':'hide'}" onclick="toggleHideCat('${esc(c)}');renderProfilePanel()" title="${isHid?'Mostrar':'Ocultar'}">${isHid?'👁️':'🚫'}</button>
-        ${delBtn}
+        <button class="pcat-btn del" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>
       </div>
     </div>`;
   }
-  if(custom.length>0){
-    catRows+=`<div class="cat-section-lbl">Personalizadas</div>`;
-    custom.forEach(c=>{catRows+=pCatRow(c,true);});
-  }
-  if(activeDefs.length>0){
-    catRows+=`<div class="cat-section-lbl" style="margin-top:${custom.length?'12px':'0'}">Predefinidas</div>`;
-    activeDefs.forEach(c=>{catRows+=pCatRow(c,false);});
-  }
-  if(!custom.length&&!activeDefs.length){
-    catRows=`<div class="empty" style="padding:16px 0"><div class="empty-ico">🏷️</div><p>Sin categorías</p></div>`;
-  }
+  const ingCats=cats.filter(c=>catTypeFor(c)==='ingreso');
+  const egCats=cats.filter(c=>catTypeFor(c)!=='ingreso');
+  let catRows=`<div class="cat-section-lbl">📤 Egresos</div><div class="pcats-list">`;
+  catRows+=egCats.length?egCats.map(pCatRow).join(''):`<div style="font-size:12px;color:var(--txt3);padding:8px 0">Sin categorías de egreso</div>`;
+  catRows+=`</div><button class="pcat-add-btn" onclick="addCatFromProfile('egreso')">＋ Egreso</button>`;
+  catRows+=`<div class="cat-section-lbl" style="margin-top:12px">📥 Ingresos</div><div class="pcats-list">`;
+  catRows+=ingCats.length?ingCats.map(pCatRow).join(''):`<div style="font-size:12px;color:var(--txt3);padding:8px 0">Sin categorías de ingreso</div>`;
+  catRows+=`</div><button class="pcat-add-btn" onclick="addCatFromProfile('ingreso')">＋ Ingreso</button>`;
 
   const isDark=!document.body.classList.contains('light');
   const hasInstallBtn=document.getElementById('btn-install')?.style.display!=='none';
@@ -2216,10 +2395,9 @@ function renderProfilePanel(){
     </div>
 
     <div class="profile-sec-lbl">Categorías</div>
-    <div class="pcats-list">${catRows}</div>
-    <button class="pcat-add-btn" onclick="addCatFromProfile()">＋ Nueva categoría</button>
+    ${catRows}
 
-    <div class="profile-sec-lbl">Configuración</div>
+    <div class="profile-sec-lbl" style="margin-top:16px">Configuración</div>
     <button class="profile-action-row" onclick="toggleTheme();renderProfilePanel()">
       <span class="par-ico">${isDark?'☀️':'🌙'}</span>Modo ${isDark?'claro':'oscuro'}
       <span class="par-chevron">›</span>
@@ -2231,14 +2409,14 @@ function renderProfilePanel(){
   `;
 }
 
-function addCatFromProfile(){
-  const name=prompt('Nombre de la nueva categoría:');
+function addCatFromProfile(type='egreso'){
+  const name=prompt(`Nueva categoría de ${type==='ingreso'?'INGRESO':'EGRESO'}:`);
   if(!name?.trim())return;
   const t=name.trim();
   if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  cats.push(t);saveLocal();buildCatSelect();renderAll();
+  cats.push(t);setCatType(t,type);saveLocal();buildCatSelect();renderAll();
   renderProfilePanel();
-  toast(`✅ Categoría "${t}" creada`);
+  toast(`✅ Categoría "${t}" (${type}) creada`);
 }
 
 /* ══════════════════════════════════
@@ -2252,11 +2430,20 @@ function openCatEdit(catName){
   document.getElementById('cat-edit-name').value=catName;
   document.getElementById('cat-edit-icon-preview').textContent=currentIcon;
   document.getElementById('cat-edit-title').textContent=`✏️ Editar categoría`;
+  // Set cat type
+  const ct=catTypeFor(catName);
+  document.getElementById('cat-edit-type').value=ct;
+  selectCatType(ct);
   // Build icon grid — current icon first, then presets (dedup)
   const allIcons=[...new Set([currentIcon,...PRESET_ICONS])];
   document.getElementById('icon-picker-grid').innerHTML=allIcons.map(ic=>`<button class="icon-btn${ic===currentIcon?' selected':''}" onclick="selectCatIcon('${ic}')">${ic}</button>`).join('');
   document.getElementById('cat-edit-overlay').classList.add('on');
   setTimeout(()=>document.getElementById('cat-edit-name').focus(),250);
+}
+function selectCatType(t){
+  document.getElementById('cat-edit-type').value=t;
+  document.getElementById('cat-type-btn-egreso').className='type-btn'+(t==='egreso'?' ae':'');
+  document.getElementById('cat-type-btn-ingreso').className='type-btn'+(t==='ingreso'?' ai':'');
 }
 function selectCatIcon(ico){
   _catEditSelectedIcon=ico;
@@ -2288,6 +2475,10 @@ function saveCatEdit(){
     const ov=loadIconOverrides();
     if(ov[oldName]){ov[newName]=ov[oldName];delete ov[oldName];saveIconOverrides(ov);}
   }
+  // Save cat type
+  const newType=document.getElementById('cat-edit-type').value||'egreso';
+  setCatType(newName,newType);
+  if(newName!==oldName)delete catTypes[oldName];
   // Rename if needed
   if(newName!==oldName){
     if(cats.includes(newName)){toast('⚠️ Ya existe una categoría con ese nombre');return;}
@@ -2608,6 +2799,17 @@ function closeConf(){pendingDel=null;document.getElementById('conf-overlay').cla
 async function doDelete(){
   if(!pendingDel){closeConf();return;}
   const{type,id,name}=pendingDel;closeConf();
+  if(type==='card'){
+    haptic([30,30,60]);
+    installments=installments.filter(i=>i.cardId!==id);
+    cards=cards.filter(c=>c.id!==id);
+    saveCards();renderTarjetasTab();toast('🗑️ Tarjeta eliminada');return;
+  }
+  if(type==='installment'){
+    haptic([30,30,60]);
+    installments=installments.filter(i=>i.id!==id);
+    saveCards();renderTarjetasTab();toast('🗑️ Cuota eliminada');return;
+  }
   if(type==='cat'){
     haptic([30,30,60]);
     cats=cats.filter(c=>c!==name);saveLocal();buildCatSelect();renderCatManager();
@@ -2654,9 +2856,9 @@ async function doDelete(){
 function switchTab(t){
   activeTab=t;
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('on',(i===0&&t==='dashboard')||(i===1&&t==='lista')||(i===2&&t==='usd')||(i===3&&t==='saldos')||(i===4&&t==='cuentas'));
+    b.classList.toggle('on',(i===0&&t==='dashboard')||(i===1&&t==='lista')||(i===2&&t==='usd')||(i===3&&t==='saldos')||(i===4&&t==='cuentas')||(i===5&&t==='tarjetas'));
   });
-  ['dashboard','lista','usd','saldos','cuentas'].forEach(s=>{
+  ['dashboard','lista','usd','saldos','cuentas','tarjetas'].forEach(s=>{
     const el=document.getElementById('tab-'+s);if(el)el.classList.toggle('on',s===t);
   });
   const inMain=t==='dashboard'||t==='lista';
@@ -2665,11 +2867,13 @@ function switchTab(t){
   document.getElementById('fab-usd').classList.toggle('hidden',t!=='usd');
   document.getElementById('fab-debt').classList.toggle('hidden',t!=='saldos');
   document.getElementById('fab-account').classList.toggle('hidden',t!=='cuentas');
+  document.getElementById('fab-install').classList.toggle('hidden',t!=='tarjetas');
   if(t==='lista')renderListSec();
   if(t==='dashboard')renderDashboard();
   if(t==='usd')renderUsdTab();
   if(t==='saldos')renderSaldosTab();
   if(t==='cuentas'){loadAccounts();renderCuentasTab();}
+  if(t==='tarjetas')renderTarjetasTab();
 }
 
 /* ══════════════════════════════════
@@ -3198,7 +3402,17 @@ window.addEventListener('appinstalled',()=>{
     if(document.getElementById('cat-overlay')?.classList.contains('on')){
       closeCatManager();history.pushState({pwa:1},'');return;
     }
-    // 4. Cerrar modal principal (gasto, USD, deuda, etc.)
+    // 4. Cerrar modales de tarjetas
+    if(document.getElementById('pay-card-overlay')?.classList.contains('on')){
+      closePayCardModal();history.pushState({pwa:1},'');return;
+    }
+    if(document.getElementById('install-modal-overlay')?.classList.contains('on')){
+      closeInstallmentModal();history.pushState({pwa:1},'');return;
+    }
+    if(document.getElementById('card-overlay')?.classList.contains('on')){
+      closeCardModal();history.pushState({pwa:1},'');return;
+    }
+    // 5. Cerrar modal principal (gasto, USD, deuda, etc.)
     if(document.getElementById('m-overlay')?.classList.contains('on')){
       closeModal();history.pushState({pwa:1},'');return;
     }
@@ -3442,7 +3656,9 @@ function renderStats(mk){
 let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
-  document.getElementById('qa-cat-grid').innerHTML=cats.map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(c)}"><span class="qa-ico">${icon(c)}</span>${esc(c.length>7?c.slice(0,7)+'…':c)}</button>`).join('');
+  // Only show egreso categories in quick add
+  const egCats=cats.filter(c=>catTypeFor(c)!=='ingreso');
+  document.getElementById('qa-cat-grid').innerHTML=egCats.map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(c)}"><span class="qa-ico">${icon(c)}</span>${esc(c.length>7?c.slice(0,7)+'…':c)}</button>`).join('');
   document.getElementById('qa-overlay').classList.add('on');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
@@ -3459,6 +3675,274 @@ async function saveQuickAdd(){
   if(!_qaCat){toast('⚠️ Elegí una categoría');return;}
   const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
   expenses.push(exp);haptic();closeQuickAdd();renderAll();toast(`✅ ${icon(_qaCat)} ${fmt(amt)} en ${_qaCat}`);
+  skipNextArs=fbOnline;await persistArs(exp,null);
+}
+
+/* ══════════════════════════════════
+   CREDIT CARDS (TARJETAS)
+══════════════════════════════════ */
+let cards=[],installments=[];
+const CARD_EMOJIS=['💳','🏦','💰','🛡️','✈️','🌟','💜','🔵','🟣','🔷'];
+
+function loadCards(){
+  try{cards=JSON.parse(localStorage.getItem(lsKey(CARDS_SK)))||[];}catch{cards=[];}
+  try{installments=JSON.parse(localStorage.getItem(lsKey(INSTALL_SK)))||[];}catch{installments=[];}
+}
+function saveCards(){
+  try{
+    localStorage.setItem(lsKey(CARDS_SK),JSON.stringify(cards));
+    localStorage.setItem(lsKey(INSTALL_SK),JSON.stringify(installments));
+  }catch(e){}
+}
+
+function cardMonthlyTotal(cardId,mk){
+  // mk = 'YYYY-MM'
+  return installments.filter(inst=>inst.cardId===cardId).reduce((sum,inst)=>{
+    const[sy,sm]=inst.startMonth.split('-').map(Number);
+    const[cy,cm]=mk.split('-').map(Number);
+    const elapsed=(cy-sy)*12+(cm-sm);
+    if(elapsed>=0&&elapsed<inst.installments)return sum+(inst.totalAmount/inst.installments);
+    return sum;
+  },0);
+}
+
+function activeInstallments(cardId,mk){
+  return installments.filter(inst=>{
+    if(inst.cardId!==cardId)return false;
+    const[sy,sm]=inst.startMonth.split('-').map(Number);
+    const[cy,cm]=mk.split('-').map(Number);
+    const elapsed=(cy-sy)*12+(cm-sm);
+    return elapsed>=0&&elapsed<inst.installments;
+  });
+}
+
+function renderTarjetasTab(){
+  const mk=nowKey();
+  if(!cards.length){
+    document.getElementById('tarjetas-summary').innerHTML='';
+    document.getElementById('tarjetas-list').innerHTML=`<div class="empty"><div class="empty-ico">💳</div><p>No tenés tarjetas cargadas</p><p style="font-size:12px;margin-top:6px">Tocá "＋ Tarjeta" para agregar</p></div>`;
+    document.getElementById('installments-list').innerHTML='';
+    return;
+  }
+  // Summary total
+  const totalMes=cards.reduce((s,c)=>s+cardMonthlyTotal(c.id,mk),0);
+  document.getElementById('tarjetas-summary').innerHTML=totalMes>0?`
+    <div class="tarjetas-total">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:rgba(168,85,247,.8);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Total resúmenes este mes</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#a855f7">${fmt(totalMes)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);">${cards.length} tarjeta${cards.length!==1?'s':''}</div>
+    </div>`:'';
+
+  // Cards list
+  let html='';
+  cards.forEach(card=>{
+    const monthTotal=cardMonthlyTotal(card.id,mk);
+    const actives=activeInstallments(card.id,mk);
+    const paidThisMonth=expenses.some(e=>e.type==='Egreso'&&e.category==='💳 Tarjeta'&&e.description?.includes(card.name)&&monthKey(e.date)===mk);
+    html+=`<div class="card-banner">
+      ${paidThisMonth?'<div class="card-payment-badge">✅ Pagado</div>':''}
+      <div class="card-banner-top">
+        <div class="card-ava">${esc(card.emoji)}</div>
+        <div class="card-info">
+          <div class="card-name">${esc(card.name)}</div>
+          <div class="card-sub">${card.closingDay?`Cierre día ${card.closingDay}`:''} ${card.dueDay?`· Vence día ${card.dueDay}`:''}</div>
+        </div>
+        <div class="card-month-total">
+          <div class="card-month-lbl">Este mes</div>
+          <div class="card-month-val">${fmt(monthTotal)}</div>
+        </div>
+      </div>
+      ${actives.length?`<div class="card-installments">${actives.map(inst=>{
+        const[sy,sm]=inst.startMonth.split('-').map(Number);
+        const[cy,cm]=mk.split('-').map(Number);
+        const cuotaN=(cy-sy)*12+(cm-sm)+1;
+        const cuotaAmt=inst.totalAmount/inst.installments;
+        return`<div class="inst-row">
+          <div class="inst-row-ico">${icon(inst.category)}</div>
+          <div class="inst-row-info">
+            <div class="inst-row-desc">${esc(inst.description)}</div>
+            <div class="inst-row-meta">Cuota ${cuotaN}/${inst.installments} · ${esc(inst.category)}</div>
+          </div>
+          <div class="inst-row-amt">${fmt(cuotaAmt)}</div>
+          <button class="inst-row-del" onclick="deleteInstallment('${inst.id}')" title="Eliminar">🗑️</button>
+        </div>`;
+      }).join('')}</div>`:'<div style="font-size:12px;color:var(--txt3);padding:4px 0 8px">Sin cuotas activas este mes</div>'}
+      <div class="card-actions-row">
+        <button class="btn-pay-card" onclick="openPayCardModal('${card.id}')" ${!monthTotal?'disabled':''}>
+          ${paidThisMonth?'✅ Pagado este mes':'💸 Pagar resumen · '+fmt(monthTotal)}
+        </button>
+        <button class="btn-card-edit" onclick="openCardModal('${card.id}')">✏️</button>
+        <button class="btn-card-del" onclick="deleteCard('${card.id}')">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('tarjetas-list').innerHTML=html;
+
+  // All active installments across all cards
+  const allActive=installments.filter(inst=>{
+    const[sy,sm]=inst.startMonth.split('-').map(Number);
+    const[cy,cm]=mk.split('-').map(Number);
+    const elapsed=(cy-sy)*12+(cm-sm);
+    return elapsed>=0&&elapsed<inst.installments;
+  });
+  // Future installments (> current month)
+  const futureCount=installments.filter(inst=>{
+    const[sy,sm]=inst.startMonth.split('-').map(Number);
+    const today=new Date();
+    const cy=today.getFullYear(),cm=today.getMonth()+1;
+    const end=new Date(sy+(Math.floor((sm-1+inst.installments)/12)),((sm-1+inst.installments)%12));
+    return end>today;
+  }).length;
+  document.getElementById('installments-list').innerHTML=allActive.length?allActive.map(inst=>{
+    const card=cards.find(c=>c.id===inst.cardId)||{name:'?',emoji:'💳'};
+    const[sy,sm]=inst.startMonth.split('-').map(Number);
+    const[cy,cm]=mk.split('-').map(Number);
+    const elapsed=(cy-sy)*12+(cm-sm);
+    const remaining=inst.installments-elapsed;
+    return`<div class="inst-row">
+      <div class="inst-row-ico">${esc(card.emoji)}</div>
+      <div class="inst-row-info">
+        <div class="inst-row-desc">${esc(inst.description)}</div>
+        <div class="inst-row-meta">${esc(card.name)} · ${remaining} cuota${remaining!==1?'s':''} restantes · ${esc(inst.category)}</div>
+      </div>
+      <div class="inst-row-amt">${fmt(inst.totalAmount/inst.installments)}/mes</div>
+      <button class="inst-row-del" onclick="deleteInstallment('${inst.id}')" title="Eliminar">🗑️</button>
+    </div>`;
+  }).join(''):'<div class="empty"><div class="empty-ico">✅</div><p>No hay cuotas activas</p></div>';
+}
+
+// CARD CRUD
+function openCardModal(id=null){
+  const card=id?cards.find(c=>c.id===id):null;
+  document.getElementById('card-modal-title').textContent=card?'Editar tarjeta':'Nueva tarjeta';
+  document.getElementById('card-id').value=id||'';
+  document.getElementById('card-name').value=card?.name||'';
+  document.getElementById('card-emoji-preview').textContent=card?.emoji||'💳';
+  document.getElementById('card-closing').value=card?.closingDay||'';
+  document.getElementById('card-due').value=card?.dueDay||'';
+  document.getElementById('card-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('card-name').focus(),200);
+}
+function closeCardModal(){document.getElementById('card-overlay').classList.remove('on');}
+function cardOverlayClick(ev){if(ev.target===document.getElementById('card-overlay'))closeCardModal();}
+function pickCardEmoji(){
+  const ex=document.getElementById('card-emoji-picker-inline');if(ex){ex.remove();return;}
+  const g=CARD_EMOJIS.map(e=>`<span onclick="document.getElementById('card-emoji-preview').textContent='${e}';document.getElementById('card-emoji-picker-inline').remove()" style="font-size:28px;cursor:pointer;padding:6px;border-radius:8px;display:inline-block">${e}</span>`).join('');
+  const d=document.createElement('div');d.id='card-emoji-picker-inline';d.style.cssText='background:var(--modal-bg);border:1px solid var(--bdr2);border-radius:14px;padding:10px;margin-top:8px;text-align:center;flex-wrap:wrap;display:flex;justify-content:center';d.innerHTML=g;
+  document.getElementById('card-emoji-preview').parentNode.appendChild(d);
+}
+function saveCard(){
+  const id=document.getElementById('card-id').value;
+  const name=document.getElementById('card-name').value.trim();
+  if(!name){toast('⚠️ Escribí un nombre');return;}
+  const emoji=document.getElementById('card-emoji-preview').textContent;
+  const closingDay=parseInt(document.getElementById('card-closing').value)||null;
+  const dueDay=parseInt(document.getElementById('card-due').value)||null;
+  const card={id:id||'card_'+newId(),name,emoji,closingDay,dueDay,createdAt:id?cards.find(c=>c.id===id)?.createdAt||Date.now():Date.now()};
+  if(id){const i=cards.findIndex(c=>c.id===id);if(i>-1)cards[i]=card;else cards.push(card);}else cards.push(card);
+  saveCards();closeCardModal();renderTarjetasTab();haptic();toast(`✅ Tarjeta "${name}" ${id?'actualizada':'creada'}`);
+}
+function deleteCard(id){
+  const c=cards.find(x=>x.id===id);
+  pendingDel={type:'card',id};
+  document.getElementById('conf-txt').textContent=`¿Eliminar la tarjeta "${c?.name}"?\nTambién se eliminarán todas sus cuotas.`;
+  document.getElementById('conf-overlay').classList.add('on');
+}
+
+// INSTALLMENT CRUD
+function openInstallmentModal(id=null){
+  if(!cards.length){toast('⚠️ Primero agregá una tarjeta');return;}
+  const inst=id?installments.find(i=>i.id===id):null;
+  document.getElementById('install-modal-title').textContent=inst?'Editar cuota':'Nueva compra en cuotas';
+  document.getElementById('inst-id').value=id||'';
+  // Populate card select
+  document.getElementById('inst-card').innerHTML=cards.map(c=>`<option value="${c.id}">${esc(c.emoji)} ${esc(c.name)}</option>`).join('');
+  if(inst?.cardId)document.getElementById('inst-card').value=inst.cardId;
+  document.getElementById('inst-desc').value=inst?.description||'';
+  document.getElementById('inst-total').value=inst?.totalAmount||'';
+  document.getElementById('inst-qty').value=inst?.installments||'';
+  // Category select (expense cats only)
+  const egCats=cats.filter(c=>catTypeFor(c)!=='ingreso');
+  document.getElementById('inst-cat').innerHTML=egCats.map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
+  if(inst?.category)document.getElementById('inst-cat').value=inst.category;
+  // Start month
+  const today=new Date();
+  document.getElementById('inst-start').value=inst?.startMonth||`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('inst-preview').style.display='none';
+  document.getElementById('install-modal-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('inst-total').focus(),200);
+  calcInstallmentPreview();
+}
+function closeInstallmentModal(){document.getElementById('install-modal-overlay').classList.remove('on');}
+function installModalOverlayClick(ev){if(ev.target===document.getElementById('install-modal-overlay'))closeInstallmentModal();}
+function calcInstallmentPreview(){
+  const total=parseFloat(document.getElementById('inst-total').value)||0;
+  const qty=parseInt(document.getElementById('inst-qty').value)||0;
+  const prev=document.getElementById('inst-preview');
+  if(total>0&&qty>0){
+    const monthly=total/qty;
+    document.getElementById('inst-preview-val').textContent=fmt(Math.round(monthly));
+    document.getElementById('inst-preview-sub').textContent=`${qty} cuotas · Total ${fmt(total)}`;
+    prev.style.display='block';
+  }else{prev.style.display='none';}
+}
+function saveInstallment(){
+  const id=document.getElementById('inst-id').value;
+  const cardId=document.getElementById('inst-card').value;
+  const description=document.getElementById('inst-desc').value.trim();
+  const category=document.getElementById('inst-cat').value;
+  const totalAmount=parseFloat(document.getElementById('inst-total').value);
+  const qty=parseInt(document.getElementById('inst-qty').value);
+  const startMonth=document.getElementById('inst-start').value;
+  if(!description){toast('⚠️ Escribí una descripción');return;}
+  if(!totalAmount||totalAmount<=0){toast('⚠️ Ingresá el monto total');return;}
+  if(!qty||qty<1||qty>60){toast('⚠️ Cuotas debe ser entre 1 y 60');return;}
+  if(!startMonth){toast('⚠️ Indicá el mes de inicio');return;}
+  const inst={id:id||'inst_'+newId(),cardId,description,category,totalAmount,installments:qty,startMonth,createdAt:id?installments.find(i=>i.id===id)?.createdAt||Date.now():Date.now()};
+  if(id){const i=installments.findIndex(x=>x.id===id);if(i>-1)installments[i]=inst;else installments.push(inst);}else installments.push(inst);
+  saveCards();closeInstallmentModal();renderTarjetasTab();haptic();
+  toast(`✅ ${description} · ${qty} cuotas de ${fmt(Math.round(totalAmount/qty))}`);
+}
+function deleteInstallment(id){
+  const inst=installments.find(i=>i.id===id);
+  pendingDel={type:'installment',id};
+  document.getElementById('conf-txt').textContent=`¿Eliminar la cuota "${inst?.description}"?\nEsta acción no se puede deshacer.`;
+  document.getElementById('conf-overlay').classList.add('on');
+}
+
+// PAY CARD MODAL
+function openPayCardModal(cardId){
+  const card=cards.find(c=>c.id===cardId);if(!card)return;
+  const mk=nowKey();
+  const total=cardMonthlyTotal(cardId,mk);
+  const actives=activeInstallments(cardId,mk);
+  document.getElementById('pay-card-id').value=cardId;
+  document.getElementById('pay-card-title').textContent=`💳 Pagar ${card.name}`;
+  document.getElementById('pay-card-total').textContent=fmt(Math.round(total));
+  document.getElementById('pay-card-detail').innerHTML=actives.map(inst=>{
+    const cuotaAmt=Math.round(inst.totalAmount/inst.installments);
+    return`${icon(inst.category)} ${esc(inst.description)}: <strong>${fmt(cuotaAmt)}</strong>`;
+  }).join('<br>');
+  document.getElementById('pay-card-amt').value=Math.round(total)||'';
+  document.getElementById('pay-card-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('pay-card-overlay').classList.add('on');
+}
+function closePayCardModal(){document.getElementById('pay-card-overlay').classList.remove('on');}
+function payCardOverlayClick(ev){if(ev.target===document.getElementById('pay-card-overlay'))closePayCardModal();}
+async function confirmPayCard(){
+  const cardId=document.getElementById('pay-card-id').value;
+  const card=cards.find(c=>c.id===cardId);if(!card)return;
+  const amt=parseFloat(document.getElementById('pay-card-amt').value);
+  const date=document.getElementById('pay-card-date').value;
+  if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
+  if(!date){toast('⚠️ Ingresá la fecha');return;}
+  // Ensure '💳 Tarjeta' category exists as egreso
+  if(!cats.includes('💳 Tarjeta')){cats.push('💳 Tarjeta');setCatType('💳 Tarjeta','egreso');saveLocal();}
+  const exp={id:newId(),type:'Egreso',date,category:'💳 Tarjeta',description:`Pago tarjeta ${card.name}`,notes:`Resumen ${monthLabel(nowKey())}`,amount:amt,myAmount:amt,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
+  expenses.push(exp);haptic();closePayCardModal();renderAll();renderTarjetasTab();
+  toast(`✅ Pago de ${card.name} registrado · ${fmt(amt)}`);
   skipNextArs=fbOnline;await persistArs(exp,null);
 }
 
