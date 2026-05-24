@@ -13,7 +13,7 @@
   </script>
   <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · v1.16</title>
+  <title>Mis Gastos · v1.17</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7C5CFA" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -563,6 +563,67 @@
     .help-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid;vertical-align:middle;margin-left:4px}
     .help-badge.eg{background:rgba(244,63,94,.08);color:var(--red);border-color:rgba(244,63,94,.25)}
     .help-badge.ing{background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.25)}
+
+    /* ════ VISUAL ANIMATIONS v1.17 ════ */
+    @keyframes slideUpIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(124,92,250,.0)}50%{box-shadow:0 0 18px 2px rgba(124,92,250,.18)}}
+    @keyframes shimmerSlide{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+    /* Tab section entrance */
+    .sec.on{animation:slideUpIn .3s cubic-bezier(.22,.68,0,1.2) both}
+
+    /* Card entrance stagger */
+    .sec.on .card{animation:slideUpIn .35s cubic-bezier(.22,.68,0,1.2) both}
+    .sec.on .cards .card:nth-child(1){animation-delay:30ms}
+    .sec.on .cards .card:nth-child(2){animation-delay:80ms}
+    .sec.on .cards .card:nth-child(3){animation-delay:130ms}
+    .sec.on .cards .card:nth-child(4){animation-delay:180ms}
+    .sec.on .chart-box{animation:slideUpIn .4s ease both;animation-delay:100ms}
+    .sec.on .box{animation:slideUpIn .38s ease both;animation-delay:80ms}
+
+    /* Number value glow */
+    .card-val.g{text-shadow:0 0 22px rgba(34,197,94,.30)}
+    .card-val.r{text-shadow:0 0 22px rgba(244,63,94,.28)}
+    .card-val.y{text-shadow:0 0 18px rgba(251,191,36,.22)}
+    .card-val.p{filter:drop-shadow(0 0 8px rgba(124,92,250,.35))}
+    .card-val.gold{text-shadow:0 0 18px rgba(245,158,11,.30)}
+    .card-val.teal{text-shadow:0 0 18px rgba(45,212,191,.28)}
+
+    /* Card hover glow */
+    .card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+    .card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(10,5,30,.35);border-color:var(--bdr2)}
+    .card:active{transform:scale(.985)}
+
+    /* Positive balance card pulse */
+    .card.bal-positive{animation:pulseGlow 3s ease-in-out infinite}
+    body.light .card.bal-positive{animation:none;border-color:rgba(34,197,94,.35)}
+
+    /* Expense items — left accent by type */
+    .exp-item{border-left:3px solid transparent;transition:all .18s,border-left-color .2s}
+    .exp-item.is-income{border-left-color:rgba(34,197,94,.45)}
+    .exp-item.is-expense{border-left-color:rgba(244,63,94,.30)}
+
+    /* Button press tactile */
+    .btn-save{transition:all .15s;transform:translateY(0)}
+    .btn-save:active{transform:scale(.96) translateY(1px);filter:brightness(.9)}
+    .btn-cancel:active{transform:scale(.97)}
+    .tab{transition:all .15s}
+    .tab:active{transform:scale(.93)}
+    .btn-ico:active{transform:scale(.88)}
+    .pcat-btn:active{transform:scale(.85)}
+
+    /* FAB press */
+    .fab:active{transform:scale(.88)!important}
+
+    /* Search input focus glow */
+    .f-ctrl:focus{box-shadow:0 0 0 3px rgba(124,92,250,.18)}
+
+    /* Expense amount shimmer on hover */
+    .exp-item:hover .exp-amt{filter:brightness(1.12)}
+
+    /* USD banner value glow */
+    .usd-banner-val{text-shadow:0 0 24px rgba(245,158,11,.30)}
 
     /* ════ DESKTOP LAYOUT ════ */
     @media(min-width:900px){
@@ -1879,6 +1940,24 @@ function fmt(n){return'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');}
 function fmtU(n){return'U$S '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
+
+/* ── Animated number counter ── */
+function animateCardVal(id,finalVal,cls){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const abs=Math.abs(finalVal),neg=finalVal<0;
+  const duration=550;
+  const start=performance.now();
+  if(cls)el.className='card-val '+cls;
+  const run=now=>{
+    const t=Math.min((now-start)/duration,1);
+    const e=1-Math.pow(1-t,3); // ease-out cubic
+    el.textContent=(neg?'-':'')+fmt(abs*e);
+    if(t<1)requestAnimationFrame(run);
+    else el.textContent=(neg?'-':'')+fmt(abs);
+  };
+  requestAnimationFrame(run);
+}
 function monthKey(d){return d?d.slice(0,7):'';}
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
@@ -1958,11 +2037,13 @@ function renderDashboard(){
   const mk=nowKey();
   document.getElementById('hdr-month').textContent=monthLabel(mk);
   const{ing,pag,real,bal}=calcSummary(mk);
-  document.getElementById('c-ing').textContent=fmt(ing);
-  document.getElementById('c-pag').textContent=fmt(pag);
-  document.getElementById('c-real').textContent=fmt(real);
-  const balEl=document.getElementById('c-bal');
-  balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');
+  animateCardVal('c-ing',ing,'g');
+  animateCardVal('c-pag',pag,'r');
+  animateCardVal('c-real',real,'y');
+  animateCardVal('c-bal',bal,bal>=0?'g':'r');
+  // Balance card glow pulse when positive
+  const balCard=document.getElementById('c-bal')?.closest('.card');
+  if(balCard){balCard.classList.toggle('bal-positive',bal>0);}
   renderPieChart(mk);
   renderMonthlyChart();
   renderProjection();
@@ -2205,7 +2286,7 @@ function expHTML(e,actions){
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${esc(e.notes)}</div>`:'';
   const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">✏️</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">🗑️</button></div>`:'';
-  return`<div class="exp-item swipeable" data-id="${e.id}" onclick="editExp('${e.id}',event)">
+  return`<div class="exp-item swipeable ${ing?'is-income':'is-expense'}" data-id="${e.id}" onclick="editExp('${e.id}',event)">
     <div class="exp-ico purple-bg">${icon(e.category)}</div>
     <div class="exp-info">
       <div class="exp-desc">${esc(e.description||e.category)} ${pending}</div>
@@ -3090,7 +3171,10 @@ function switchTab(t){
     b.classList.toggle('on',(i===0&&t==='dashboard')||(i===1&&t==='lista')||(i===2&&t==='usd')||(i===3&&t==='saldos')||(i===4&&t==='cuentas')||(i===5&&t==='tarjetas'));
   });
   ['dashboard','lista','usd','saldos','cuentas','tarjetas'].forEach(s=>{
-    const el=document.getElementById('tab-'+s);if(el)el.classList.toggle('on',s===t);
+    const el=document.getElementById('tab-'+s);
+    if(!el)return;
+    el.classList.toggle('on',s===t);
+    if(s===t){el.style.animation='none';el.offsetHeight;el.style.animation='';}
   });
   const inMain=t==='dashboard'||t==='lista';
   document.getElementById('fab-ars').classList.toggle('hidden',!inMain);
