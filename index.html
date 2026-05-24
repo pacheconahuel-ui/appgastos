@@ -13,7 +13,7 @@
   </script>
   <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · v1.15</title>
+  <title>Mis Gastos · v1.16</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7C5CFA" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -544,6 +544,25 @@
     /* VER MÁS BUTTON */
     .ver-mas-btn{width:100%;padding:12px;background:transparent;border:1px dashed var(--bdr2);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
     .ver-mas-btn:hover{background:var(--surf);color:var(--p1);border-color:var(--p1);border-style:solid}
+
+    /* HELP MODAL */
+    .help-section{margin-bottom:20px;border-radius:16px;border:1px solid var(--bdr);overflow:hidden}
+    .help-section-hdr{display:flex;align-items:center;gap:10px;padding:13px 16px;font-size:14px;font-weight:700;cursor:pointer;user-select:none;transition:background .15s}
+    .help-section-hdr:hover{background:var(--surf2)}
+    .help-section-hdr .hs-ico{font-size:20px;flex-shrink:0}
+    .help-section-hdr .hs-chev{margin-left:auto;font-size:13px;color:var(--txt3);transition:transform .2s}
+    .help-section-hdr.open .hs-chev{transform:rotate(90deg)}
+    .help-section-body{display:none;padding:0 16px 16px;background:rgba(255,255,255,.02)}
+    .help-section-body.open{display:block}
+    .help-tip{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+    .help-tip-ico{font-size:16px;flex-shrink:0;margin-top:2px;width:22px;text-align:center}
+    .help-tip-txt{font-size:13px;color:var(--txt2);line-height:1.5;flex:1}
+    .help-tip-txt strong{color:var(--txt);font-weight:700}
+    .help-tip-txt code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surf2);border-radius:5px;padding:1px 6px;color:var(--p1)}
+    .help-section-divider{height:1px;background:var(--bdr);margin:10px 0}
+    .help-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid;vertical-align:middle;margin-left:4px}
+    .help-badge.eg{background:rgba(244,63,94,.08);color:var(--red);border-color:rgba(244,63,94,.25)}
+    .help-badge.ing{background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.25)}
 
     /* ════ DESKTOP LAYOUT ════ */
     @media(min-width:900px){
@@ -1390,6 +1409,191 @@
     </div>
     <button class="btn-save" style="background:linear-gradient(135deg,#a855f7,#7c3aed)" onclick="confirmPayCard()">✅ Registrar pago como Egreso</button>
     <button class="btn-cancel" onclick="closePayCardModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="m-overlay" id="help-overlay" onclick="helpOverlayClick(event)">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;padding-bottom:56px">
+    <div class="m-handle"></div>
+    <div class="m-title" style="margin-bottom:18px">❓ Guía rápida</div>
+
+    <!-- RESUMEN -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-dashboard')">
+        <span class="hs-ico">📊</span><span>Resumen</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-dashboard">
+        <div class="help-tip">
+          <div class="help-tip-ico">💡</div>
+          <div class="help-tip-txt">Es tu <strong>vista principal</strong>: ves el total gastado, el saldo de tus cuentas y un gráfico de torta con la distribución por categoría del mes.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">⚡</div>
+          <div class="help-tip-txt">El botón <strong>⚡ Quick Add</strong> (abajo a la derecha) te permite registrar un egreso en segundos, sin abrir el formulario completo.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">📅</div>
+          <div class="help-tip-txt">Usá las flechas <strong>◀ ▶</strong> para navegar entre meses y comparar tu historial de gastos.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">➕</div>
+          <div class="help-tip-txt">El botón <strong>+ Nuevo</strong> abre el formulario completo para registrar tanto un <span class="help-badge eg">Egreso</span> como un <span class="help-badge ing">Ingreso</span>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-lista')">
+        <span class="hs-ico">📋</span><span>Lista</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-lista">
+        <div class="help-tip">
+          <div class="help-tip-ico">📋</div>
+          <div class="help-tip-txt">Acá están <strong>todos tus movimientos</strong>: egresos e ingresos. Podés filtrar por mes y buscar por descripción o categoría.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">✏️</div>
+          <div class="help-tip-txt">Tocá cualquier movimiento para <strong>editarlo o eliminarlo</strong>. También podés cambiar la fecha, monto, categoría o descripción.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🔁</div>
+          <div class="help-tip-txt"><strong>Gasto recurrente:</strong> al registrar un movimiento, activá la opción <code>Recurrente</code>. La app lo va a repetir automáticamente cada mes en la misma fecha.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🤝</div>
+          <div class="help-tip-txt"><strong>Dividir con alguien:</strong> en el formulario podés activar <code>Dividir con alguien</code>, elegir un contacto y el porcentaje. El saldo queda pendiente en la pestaña Saldos.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🔍</div>
+          <div class="help-tip-txt">El ícono <strong>🔍</strong> en el encabezado abre el buscador global para encontrar cualquier movimiento rápidamente.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USD -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-usd')">
+        <span class="hs-ico">💵</span><span>USD</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-usd">
+        <div class="help-tip">
+          <div class="help-tip-ico">💵</div>
+          <div class="help-tip-txt">Registrá <strong>operaciones en dólares</strong> separadas de tus pesos: ahorros, compras, ventas o transferencias en USD.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">📈</div>
+          <div class="help-tip-txt">Podés ingresar el tipo de cambio al momento de la operación para tener un registro preciso de cada transacción.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">💰</div>
+          <div class="help-tip-txt">El total acumulado en USD se muestra siempre en la parte superior de la pestaña.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALDOS -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-saldos')">
+        <span class="hs-ico">🤝</span><span>Saldos</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-saldos">
+        <div class="help-tip">
+          <div class="help-tip-ico">🤝</div>
+          <div class="help-tip-txt">Llevá el registro de <strong>lo que te deben</strong> y <strong>lo que debés</strong> a otras personas.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">👥</div>
+          <div class="help-tip-txt">Primero creá tus <strong>contactos</strong> (amigos, familia, socios). Luego podés asignarles deudas o dividir gastos con ellos desde la pestaña Lista.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">✅</div>
+          <div class="help-tip-txt">Cuando alguien te paga (o vos pagás), usá <strong>Liquidar</strong> para registrar el cobro parcial o total. El saldo se actualiza al instante.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUENTAS -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-cuentas')">
+        <span class="hs-ico">💼</span><span>Cuentas</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-cuentas">
+        <div class="help-tip">
+          <div class="help-tip-ico">💼</div>
+          <div class="help-tip-txt">Registrá tus <strong>cuentas bancarias</strong>, billeteras digitales (Mercado Pago, Ualá) o efectivo para ver tu patrimonio total.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🏦</div>
+          <div class="help-tip-txt"><strong>Saldo inicial:</strong> al crear una cuenta, ingresá el dinero que ya tenés en ella. Esto es clave para que el saldo mostrado sea correcto desde el primer día, sin tener que cargar el historial completo.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🔄</div>
+          <div class="help-tip-txt">Cada movimiento que registrás puede asociarse a una cuenta. La app actualiza el saldo automáticamente: los ingresos suman, los egresos restan.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">↔️</div>
+          <div class="help-tip-txt">Usá <strong>Transferencia entre cuentas</strong> para mover plata entre tus propias cuentas sin afectar el total de tus gastos.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARJETAS -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-tarjetas')">
+        <span class="hs-ico">💳</span><span>Tarjetas</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-tarjetas">
+        <div class="help-tip">
+          <div class="help-tip-ico">💳</div>
+          <div class="help-tip-txt">Registrá tus <strong>tarjetas de crédito</strong> y las compras en cuotas. La app calcula automáticamente cuánto pagás por mes.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🛒</div>
+          <div class="help-tip-txt"><strong>Compra en cuotas:</strong> ingresá el monto total y la cantidad de cuotas. La app divide el total y lo suma al resumen de cada mes que corresponda.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">📆</div>
+          <div class="help-tip-txt">El <strong>resumen mensual</strong> suma todas las cuotas activas de ese mes. El monto se actualiza solo a medida que pasan los meses.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">✅</div>
+          <div class="help-tip-txt">Al tocar <strong>💳 Pagar resumen</strong> confirmás el pago (podés ajustar el monto por impuestos) y se registra automáticamente como un Egreso en tu lista principal.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORÍAS -->
+    <div class="help-section">
+      <div class="help-section-hdr" onclick="toggleHelpSection('hs-cats')">
+        <span class="hs-ico">🗂️</span><span>Categorías</span><span class="hs-chev">›</span>
+      </div>
+      <div class="help-section-body" id="hs-cats">
+        <div class="help-tip">
+          <div class="help-tip-ico">👤</div>
+          <div class="help-tip-txt">Administrá tus categorías desde el menú <strong>👤 Perfil</strong> (arriba a la derecha). Cada categoría puede ser de <span class="help-badge eg">Egreso</span> o <span class="help-badge ing">Ingreso</span>.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">✏️</div>
+          <div class="help-tip-txt">Tocá <strong>✏️</strong> para editar el nombre e ícono de cualquier categoría. Elegí entre 50 íconos predefinidos o escribí tu propio emoji.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🚫</div>
+          <div class="help-tip-txt">Tocá <strong>🚫</strong> para <strong>ocultar</strong> una categoría sin eliminarla. No va a aparecer en el formulario pero su historial se mantiene.</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">➕</div>
+          <div class="help-tip-txt">Usá <strong>＋ Egreso</strong> o <strong>＋ Ingreso</strong> para crear categorías nuevas personalizadas (por ejemplo: "Sancor", "Patagonia Seguro", "Cerámica").</div>
+        </div>
+        <div class="help-tip">
+          <div class="help-tip-ico">🔀</div>
+          <div class="help-tip-txt">Al registrar un movimiento, el formulario <strong>filtra las categorías automáticamente</strong>: si elegís Egreso solo ves categorías de egreso, y viceversa.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-cancel" onclick="closeHelpModal()" style="margin-top:8px">Cerrar</button>
   </div>
 </div>
 
@@ -2349,6 +2553,29 @@ function closeProfilePanel(){
 function profileOverlayClick(ev){
   if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();
 }
+
+/* ══════════════════════════════════
+   HELP MODAL
+══════════════════════════════════ */
+function openHelpModal(){
+  document.getElementById('help-overlay').classList.add('on');
+  history.pushState({pwa:1},'');
+}
+function closeHelpModal(){
+  document.getElementById('help-overlay').classList.remove('on');
+}
+function helpOverlayClick(ev){
+  if(ev.target===document.getElementById('help-overlay'))closeHelpModal();
+}
+function toggleHelpSection(id){
+  const body=document.getElementById(id);
+  const hdr=body?.previousElementSibling;
+  if(!body)return;
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  hdr?.classList.toggle('open',!isOpen);
+}
+
 function renderProfilePanel(){
   const user=_profileUser;
   const name=user?.displayName||user?.email?.split('@')[0]||'Usuario';
@@ -2403,6 +2630,10 @@ function renderProfilePanel(){
       <span class="par-chevron">›</span>
     </button>
     ${installRow}
+    <button class="profile-action-row" onclick="closeProfilePanel();setTimeout(openHelpModal,200)">
+      <span class="par-ico">❓</span>Ayuda / Tutorial
+      <span class="par-chevron">›</span>
+    </button>
     <button class="profile-action-row" style="color:var(--red);border-color:rgba(248,113,113,.2);margin-top:4px" onclick="doLogout()">
       <span class="par-ico">⏏</span>Cerrar sesión
     </button>
@@ -2912,7 +3143,7 @@ function dismissMigration(){document.getElementById('mig-banner').classList.remo
    KEYBOARD
 ══════════════════════════════════ */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeInstallModal();}
+  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeInstallModal();closeHelpModal();}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 
@@ -3397,6 +3628,10 @@ window.addEventListener('appinstalled',()=>{
     // 4a. Cerrar perfil panel
     if(document.getElementById('profile-overlay')?.classList.contains('on')){
       closeProfilePanel();history.pushState({pwa:1},'');return;
+    }
+    // 4a2. Cerrar help modal
+    if(document.getElementById('help-overlay')?.classList.contains('on')){
+      closeHelpModal();history.pushState({pwa:1},'');return;
     }
     // 4b. Cerrar gestor de categorías
     if(document.getElementById('cat-overlay')?.classList.contains('on')){
