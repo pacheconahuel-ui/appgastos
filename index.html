@@ -13,7 +13,7 @@
   </script>
   <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · v1.17</title>
+  <title>Mis Gastos · v1.18</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#7C5CFA" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -566,7 +566,7 @@
     .help-badge.eg{background:rgba(244,63,94,.08);color:var(--red);border-color:rgba(244,63,94,.25)}
     .help-badge.ing{background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.25)}
 
-    /* ════ VISUAL ANIMATIONS v1.17 ════ */
+    /* ════ VISUAL ANIMATIONS v1.18 ════ */
     @keyframes slideUpIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(124,92,250,.0)}50%{box-shadow:0 0 24px 4px rgba(124,92,250,.22)}}
@@ -727,7 +727,7 @@
     <button onclick="sendMagicLink()" style="width:100%;padding:13px;background:transparent;border:1px solid var(--bdr2);border-radius:14px;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .2s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">✉️ Enviar link mágico al email</button>
     <div id="magic-link-sent" style="display:none;font-size:12px;color:var(--green);margin-top:8px;text-align:center">✅ ¡Link enviado! Revisá tu email.</div>
     <div class="login-toggle" onclick="toggleRegister()">¿No tenés cuenta? <span id="toggle-txt">Registrarse</span></div>
-    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.17</div>
+    <div style="margin-top:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(239,234,247,.25);letter-spacing:.04em">v1.18</div>
   </div>
 </div>
 
@@ -749,7 +749,7 @@
         <button class="btn-theme" id="btn-install" onclick="triggerInstall()" title="Instalar app" style="display:none">📲</button>
         <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
       </div>
-      <span class="app-ver">v1.17</span>
+      <span class="app-ver">v1.18</span>
       <div class="sync-pill connecting" id="sync-pill">
         <div class="dot"></div><span id="sync-label">Conectando…</span>
       </div>
@@ -975,6 +975,12 @@
           <button class="btn-manage-cats" onclick="openCatManager()">⚙️</button>
         </div>
       </div>
+    </div>
+    <div class="f-grp" id="f-account-grp" style="display:none">
+      <label class="f-lbl">Billetera / Cuenta <span style="font-weight:400;color:var(--txt3)">(opcional)</span></label>
+      <select class="f-ctrl" id="f-account">
+        <option value="">— Sin asignar —</option>
+      </select>
     </div>
     <div class="f-grp">
       <label class="f-lbl" style="display:flex;justify-content:space-between">Descripción<span id="desc-count" style="font-weight:400;opacity:.5"></span></label>
@@ -2547,6 +2553,7 @@ function saveContact(){
    MODAL GASTOS ARS
 ══════════════════════════════════ */
 function openModal(data){
+  if(!accounts.length)loadAccounts(); // asegurar que las cuentas estén cargadas
   document.getElementById('m-title').textContent=data?'Editar Registro':'Nuevo Registro';
   document.getElementById('f-id').value=data?.id||'';
   document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
@@ -2559,6 +2566,7 @@ function openModal(data){
   setType(data?.type||'Egreso');
   buildCatSelect();
   if(data?.category)document.getElementById('f-cat').value=data.category;
+  buildAccSelect(data?.accountId||null);
   // Restore split state
   splitRows=data?.splits?data.splits.map(s=>({...s})):[];
   splitPanelOpen=splitRows.length>0;
@@ -2589,6 +2597,17 @@ function buildCatSelect(){
   });
   sel.innerHTML=filtered.map(c=>`<option value="${esc(c)}">${icon(c)} ${c}</option>`).join('');
   if(cur&&filtered.includes(cur))sel.value=cur;
+}
+function buildAccSelect(preselect){
+  const grp=document.getElementById('f-account-grp');
+  const sel=document.getElementById('f-account');
+  if(!grp||!sel)return;
+  if(!accounts||!accounts.length){grp.style.display='none';return;}
+  grp.style.display='';
+  sel.innerHTML='<option value="">— Sin asignar —</option>'+
+    accounts.map(a=>`<option value="${esc(a.id)}">${esc(a.emoji)} ${esc(a.name)}</option>`).join('');
+  if(preselect)sel.value=preselect;
+  else{const last=localStorage.getItem(lsKey('gp_last_account')||'');if(last)sel.value=last;}
 }
 function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
@@ -2865,9 +2884,12 @@ async function saveExpense(){
   const theirTotal=splits.reduce((s,r)=>s+r.amount,0);
   const myAmount=splitPanelOpen&&splits.length>0?Math.max(0,amt-theirTotal):amt;
 
+  const accountId=document.getElementById('f-account')?.value||null;
+  if(accountId)try{localStorage.setItem(lsKey('gp_last_account'),accountId);}catch{}
   const exp={
     id:id||newId(),type,date,category:cat,
     description:desc||cat,notes:notes||null,amount:amt,myAmount,
+    accountId:accountId||null,
     splits:splits.length>0?splits:null,
     recurring:recurring||false,
     shared:false,sharedPercent:100,
@@ -3790,6 +3812,14 @@ function renderCuentasTab(){
     </div>`;
   });
   if(!accounts.length)html='<div class="empty"><div class="empty-ico">💼</div><p>Sin billeteras. Tocá ＋ para agregar.</p></div>';
+  // Nota de movimientos sin cuenta asignada
+  const unassigned=expenses.filter(e=>monthKey(e.date)===mk&&!e.accountId);
+  if(accounts.length&&unassigned.length){
+    html+=`<div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--yellow);display:flex;gap:8px;align-items:center">
+      <span style="font-size:16px">⚠️</span>
+      <span><strong>${unassigned.length} movimiento${unassigned.length!==1?'s':''}</strong> de este mes no ${unassigned.length!==1?'tienen':'tiene'} billetera asignada — editálos para que se reflejen en el saldo.</span>
+    </div>`;
+  }
   document.getElementById('cuentas-list').innerHTML=html;
   document.getElementById('cuentas-total-ars').textContent=fmt(arsTotal);
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
