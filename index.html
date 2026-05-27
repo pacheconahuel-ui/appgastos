@@ -937,8 +937,8 @@
 
 <!-- FABs -->
 <div class="fabs">
-  <button class="fab" id="fab-ars" onclick="openModal()">＋</button>
-  <button class="fab" id="fab-quick" onclick="openQuickAdd()" style="background:linear-gradient(135deg,#a78bfa,#667eea);box-shadow:0 8px 32px rgba(167,139,250,.35);padding:15px 18px">⚡</button>
+  <button class="fab" id="fab-ars" onclick="openQuickAdd()">＋</button>
+  <button class="fab" id="fab-quick" style="display:none" aria-hidden="true">⚡</button>
   <button class="fab gold-fab hidden" id="fab-usd" onclick="openUsdModal()">💵</button>
   <button class="fab teal-fab hidden" id="fab-debt" onclick="openDebtModal()">💚</button>
   <button class="fab hidden" id="fab-account" onclick="openTransferModal()" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 8px 32px rgba(96,165,250,.35)">⇄</button>
@@ -1194,13 +1194,14 @@
     <div class="m-handle"></div>
     <div class="m-title">⚡ Gasto rápido</div>
     <input type="number" class="qa-amount" id="qa-amt" placeholder="0" inputmode="decimal" step="any" min="0">
+    <input type="text" class="f-ctrl" id="qa-desc" placeholder="Descripción (opcional)" maxlength="200" style="margin-bottom:14px">
     <div class="f-grp">
       <label class="f-lbl">Categoría</label>
       <div class="qa-cat-grid" id="qa-cat-grid"></div>
     </div>
     <input type="hidden" id="qa-cat">
     <button class="btn-save" onclick="saveQuickAdd()">💾 Guardar</button>
-    <button class="btn-cancel" onclick="closeQuickAdd()">Cancelar · ir al formulario completo</button>
+    <button class="btn-cancel" style="background:none;border:none;color:var(--txt3);font-size:12px;padding:8px;cursor:pointer;font-family:'Outfit',sans-serif;width:100%;text-align:center" onclick="closeQuickAdd();openModal()">Avanzado · más opciones →</button>
   </div>
 </div>
 
@@ -4005,11 +4006,19 @@ function renderStats(mk){
 ══════════════════════════════════ */
 let _qaCat='';
 function openQuickAdd(){
-  document.getElementById('qa-amt').value='';_qaCat='';
-  // Only show egreso categories in quick add
+  document.getElementById('qa-amt').value='';
+  document.getElementById('qa-desc').value='';
+  _qaCat='';
+  // First 7 egreso categories + "Más…" button
   const egCats=cats.filter(c=>catTypeFor(c)!=='ingreso');
-  document.getElementById('qa-cat-grid').innerHTML=egCats.map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(c)}"><span class="qa-ico">${icon(c)}</span>${esc(c.length>7?c.slice(0,7)+'…':c)}</button>`).join('');
+  const shown=egCats.slice(0,7);
+  const masBt=egCats.length>7
+    ?`<button class="qa-cat-btn" onclick="closeQuickAdd();openModal()" title="Más opciones" style="font-size:11px"><span class="qa-ico">＋</span>Más…</button>`
+    :'';
+  document.getElementById('qa-cat-grid').innerHTML=
+    shown.map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(c)}"><span class="qa-ico">${icon(c)}</span>${esc(c.length>7?c.slice(0,7)+'…':c)}</button>`).join('')+masBt;
   document.getElementById('qa-overlay').classList.add('on');
+  history.pushState({pwa:1},'');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
 function closeQuickAdd(){document.getElementById('qa-overlay').classList.remove('on');}
@@ -4021,9 +4030,10 @@ function selectQaCat(cat){
 }
 async function saveQuickAdd(){
   const amt=parseFloat(document.getElementById('qa-amt').value);
+  const desc=(document.getElementById('qa-desc')?.value||'').trim();
   if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
   if(!_qaCat){toast('⚠️ Elegí una categoría');return;}
-  const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
+  const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:desc||_qaCat,amount:amt,myAmount:amt,accountId:null,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
   expenses.push(exp);haptic();closeQuickAdd();renderAll();toast(`✅ ${icon(_qaCat)} ${fmt(amt)} en ${_qaCat}`);
   skipNextArs=fbOnline;await persistArs(exp,null);
 }
