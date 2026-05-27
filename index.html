@@ -148,6 +148,13 @@
     .card.teal{background:rgba(45,212,191,.05);border-color:rgba(45,212,191,.2)}
     .card-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:10px}
     .card-val{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+    /* Bloque 4 — números tabulares en todos los valores monetarios */
+    .card-val,.exp-amt,.usd-banner-val,.person-bal-val,
+    .split-my-val,.split-amt-inp,.account-bal-val,
+    .saldos-sum-val,.stat-val,.card-month-val,.qa-amount{
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:"tnum";
+    }
     .card-val.g{color:var(--green)} .card-val.r{color:var(--red)} .card-val.y{color:var(--yellow)}
     .card-val.p{background:linear-gradient(135deg,var(--p1),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .card-val.gold{color:var(--gold)} .card-val.teal{color:var(--teal)}
