@@ -11,7 +11,7 @@
       if(light)document.documentElement.classList.add('pre-light');
     })();
   </script>
-  <style>html.pre-light{background:#ECEAF4}html:not(.pre-light){background:#0B0814}</style>
+  <style>html.pre-light{background:#FAFAFC}html:not(.pre-light){background:#0B0814}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Gastos · v1.18</title>
   <link rel="manifest" href="manifest.json">
@@ -43,36 +43,37 @@
       --grad-p:linear-gradient(135deg,var(--p1),var(--p2));
     }
     body.light{
-      --bg:#ECEAF4;--bg-soft:#F4F2FA;
-      --surf:rgba(255,255,255,.75);--surf2:rgba(255,255,255,.95);
-      --bdr:rgba(20,15,40,.10);--bdr2:rgba(20,15,40,.18);
+      --bg:#FAFAFC;
+      --surf:#FFFFFF;--surf2:#F5F3FB;
+      --bdr:rgba(26,17,64,.08);--bdr2:rgba(26,17,64,.16);
       --txt:#1A1140;--txt2:rgba(26,17,64,.66);--txt3:rgba(26,17,64,.48);
+      --green:#16A34A;--red:#E11D48;
       --modal-bg:#FFFFFF;
     }
-    body.light::before{background:radial-gradient(ellipse 60% 50% at 15% 10%,rgba(102,126,234,.08) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 85% 90%,rgba(118,75,162,.08) 0%,transparent 70%);}
+    body.light::before{display:none}
     body.light .login-card,body.light .modal{background:#fff;}
-    body.light .f-ctrl{background:rgba(20,15,40,.045);border-color:rgba(20,15,40,.14);color:var(--txt);}
-    body.light .f-ctrl:focus{background:rgba(124,92,250,.06);}
+    body.light .f-ctrl{background:rgba(26,17,64,.04);border-color:rgba(26,17,64,.12);color:var(--txt);}
+    body.light .f-ctrl:focus{background:rgba(124,92,250,.04);}
     body.light .f-ctrl option{background:#fff;color:#1A1140;}
-    body.light .m-handle{background:rgba(20,15,40,.15);}
+    body.light .m-handle{background:rgba(26,17,64,.12);}
     body.light .type-btn{color:var(--txt2);border-color:var(--bdr2);}
     body.light .conf-dlg{background:#fff;}
-    body.light .card{background:rgba(20,15,40,.04);border-color:rgba(20,15,40,.1);}
-    body.light .box{background:rgba(20,15,40,.04);border-color:rgba(20,15,40,.1);}
-    body.light .chart-box{background:rgba(20,15,40,.03);border-color:rgba(20,15,40,.08);}
+    body.light .card,body.light .exp-item,body.light .person-card,
+    body.light .chart-box,body.light .account-card,body.light .box{
+      box-shadow:0 1px 2px rgba(26,17,64,.06);
+    }
+    body.light .card{background:rgba(26,17,64,.025);border-color:rgba(26,17,64,.08);}
+    body.light .box{background:rgba(26,17,64,.025);border-color:rgba(26,17,64,.08);}
+    body.light .chart-box{background:rgba(26,17,64,.02);border-color:rgba(26,17,64,.07);}
     body.light .tab{color:var(--txt2);}
     body.light .tab.active{color:var(--p1);}
-    body.light .tabs{background:rgba(20,15,40,.028);border-right-color:rgba(20,15,40,.1);}
-    body.light .tab:not(.on):hover{background:rgba(20,15,40,.06);color:var(--txt);}
-    body.light .hdr{background:#E4E1F0;border-bottom:1px solid rgba(20,15,40,.10);}
-    body.light .card{box-shadow:0 1px 4px rgba(20,15,40,.06);}
-    body.light .box{box-shadow:0 1px 4px rgba(20,15,40,.06);}
-    body.light .chart-box{box-shadow:0 1px 4px rgba(20,15,40,.06);}
-    body.light .exp-item{border-color:rgba(20,15,40,.08);}
-    body.light .exp-item:hover{background:rgba(20,15,40,.04);}
-    body.light .hdr{background:rgba(250,250,252,.85);}
-    body.light .nav{background:rgba(250,250,252,.9);border-top-color:rgba(20,15,40,.1);}
-    body.light .search-inp{background:rgba(20,15,40,.045);color:var(--txt);}
+    body.light .tabs{background:rgba(26,17,64,.025);border-right-color:rgba(26,17,64,.08);}
+    body.light .tab:not(.on):hover{background:rgba(26,17,64,.05);color:var(--txt);}
+    body.light .hdr{background:rgba(250,250,252,.92);border-bottom:1px solid rgba(26,17,64,.07);}
+    body.light .exp-item{border-color:rgba(26,17,64,.07);}
+    body.light .exp-item:hover{background:rgba(26,17,64,.03);}
+    body.light .nav{background:rgba(250,250,252,.95);border-top-color:rgba(26,17,64,.08);}
+    body.light .search-inp{background:rgba(26,17,64,.04);color:var(--txt);}
     body.light .m-title{color:var(--txt);}
     body.light .f-lbl{color:var(--txt2);}
     body.light .btn-logout{background:var(--surf);border-color:var(--bdr);color:var(--txt2);}
