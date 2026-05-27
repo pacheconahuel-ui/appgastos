@@ -304,6 +304,18 @@
     .f-lbl{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:block}
     .f-ctrl{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr2);border-radius:12px;padding:13px 15px;font-size:15px;color:var(--txt);font-family:'Outfit',sans-serif;outline:none;transition:border-color .18s;-webkit-appearance:none;appearance:none}
     .f-ctrl:focus{border-color:var(--p1);background:rgba(102,126,234,.05)}
+    /* Bloque 5 — focus visible para teclado/accesibilidad */
+    .f-ctrl:focus-visible,.search-inp:focus-visible{
+      border-color:var(--p1);
+      box-shadow:0 0 0 3px rgba(124,92,250,.22);
+      outline:none;
+    }
+    .tab:focus-visible,.btn-ico:focus-visible,.fab:focus-visible,
+    .btn-save:focus-visible,.btn-cancel:focus-visible,
+    .pcat-btn:focus-visible,.profile-action-row:focus-visible{
+      box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--p1);
+      outline:none;
+    }
     .f-ctrl.gold-focus:focus{border-color:var(--gold)}
     .f-ctrl.teal-focus:focus{border-color:var(--teal)}
     .f-ctrl option{background:#160e2a}
