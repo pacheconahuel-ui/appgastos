@@ -1282,9 +1282,13 @@ const DSK='gp_debts_v1',DPQ='gp_dpending_v1';
 const PSK='gp_persons_v1';
 const HCK='gp_hidden_cats_v1'; // hidden default cats
 const RCK='gp_renamed_cats_v1'; // renamed default cats {original: newName}
+const CT_SK='gp_cat_types_v1'; // {categoryName: 'egreso'|'ingreso'}
 
 const DEF_CATS=['Supermercado','Restaurante','Padel','Mascotas','Servicios','Gimnasio','Farmacia','Compras','Salario','Fútbol','Educador Canino','Alquiler','Luz','Gas','Internet','Seguros','Streaming','Zurich','Consultas Médicas','Venta USD','Otro'];
 const ICONS={'Supermercado':'🛒','Restaurante':'🍽️','Padel':'🎾','Mascotas':'🐕','Servicios':'⚡','Gimnasio':'💪','Farmacia':'💊','Compras':'🛍️','Salario':'💰','Fútbol':'⚽','Educador Canino':'🐾','Alquiler':'🏠','Luz':'💡','Gas':'🔥','Internet':'📡','Seguros':'🛡️','Streaming':'🎬','Zurich':'🏥','Consultas Médicas':'🩺','Venta USD':'💵','Otro':'📌'};
+const DEF_ING_CATS=['Sueldo','SAC','Transferencia','Regalo','Sueldo 2','Freelance / Honorarios','Comisión','Aguinaldo / Bono','Alquiler cobrado','Otros ingresos'];
+const ING_ICONS={'Sueldo':'💼','SAC':'🎁','Transferencia':'↘️','Regalo':'🎀','Sueldo 2':'💼','Freelance / Honorarios':'💻','Comisión':'🤝','Aguinaldo / Bono':'🎁','Alquiler cobrado':'🏠','Otros ingresos':'💚'};
+Object.assign(ICONS,ING_ICONS);
 const COLORS=['#667eea','#a78bfa','#f093fb','#f87171','#4ade80','#fbbf24','#60a5fa','#34d399','#fb923c','#e879f9','#22d3ee','#a3e635','#f472b6','#818cf8','#2dd4bf','#facc15','#94a3b8','#c084fc','#f97316','#38bdf8'];
 
 // No default persons — each user creates their own contacts
@@ -1297,6 +1301,7 @@ let expenses=[],usdTx=[],debts=[],persons=[];
 let cats=[],pendingQ=[],usdPendQ=[],debtPendQ=[];
 let hiddenCats=new Set();   // default cats hidden by user
 let renamedCats={};          // {originalName: renamedTo}
+let catTypes={};              // {categoryName: 'egreso'|'ingreso'}
 let chart=null,tcChart=null;
 let pendingDel=null;
 let fbOnline=false,fbReady=false,db=null,auth=null,currentUID=null;
@@ -1323,8 +1328,8 @@ function loadLocal(){
   try{debts=JSON.parse(localStorage.getItem(lsKey(DSK)))||[];}catch{debts=[];}
   try{
     const custom=JSON.parse(localStorage.getItem(lsKey(CK)))||[];
-    cats=[...new Set([...DEF_CATS,...custom])];
-  }catch{cats=[...DEF_CATS];}
+    cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...custom])];
+  }catch{cats=[...new Set([...DEF_CATS,...DEF_ING_CATS])];}
   try{
     const saved=JSON.parse(localStorage.getItem(lsKey(PSK)))||[];
     persons=saved;
@@ -1334,6 +1339,7 @@ function loadLocal(){
   try{debtPendQ=JSON.parse(localStorage.getItem(lsKey(DPQ)))||[];}catch{debtPendQ=[];}
   try{hiddenCats=new Set(JSON.parse(localStorage.getItem(lsKey(HCK)))||[]);}catch{hiddenCats=new Set();}
   try{renamedCats=JSON.parse(localStorage.getItem(lsKey(RCK)))||{};}catch{renamedCats={};}
+  loadCatTypes();
   // Load new modules
   setTimeout(()=>{if(typeof loadAccounts==='function'){loadAccounts();loadBudgets();loadGoals();}},0);
 }
@@ -1344,10 +1350,11 @@ function saveLocal(){
     localStorage.setItem(lsKey(USK),JSON.stringify(usdTx));
     localStorage.setItem(lsKey(DSK),JSON.stringify(debts));
     localStorage.setItem(lsKey(PSK),JSON.stringify(persons));
-    const custom=cats.filter(c=>!DEF_CATS.includes(c));
+    const custom=cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));
     localStorage.setItem(lsKey(CK),JSON.stringify(custom));
     localStorage.setItem(lsKey(HCK),JSON.stringify([...hiddenCats]));
     localStorage.setItem(lsKey(RCK),JSON.stringify(renamedCats));
+    localStorage.setItem(lsKey(CT_SK),JSON.stringify(catTypes));
     localStorage.setItem(lsKey(PQ),JSON.stringify(pendingQ));
     localStorage.setItem(lsKey(UPQ),JSON.stringify(usdPendQ));
     localStorage.setItem(lsKey(DPQ),JSON.stringify(debtPendQ));
@@ -1437,9 +1444,10 @@ async function pushSettings(){
   skipNextSettings=true;
   const catIcons=loadIconOverrides();
   const payload={
-    customCats:cats.filter(c=>!DEF_CATS.includes(c)),
+    customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
     hiddenCats:[...hiddenCats],
     renamedCats,
+    catTypes,
     catIcons,
     persons,
     accounts,
@@ -1481,7 +1489,7 @@ function doLogout(){
   if(debtListener)db?.ref(debtBase()).off('value',debtListener);
   expenses=[];usdTx=[];debts=[];cats=[...DEF_CATS];persons=[...DEF_PERSONS];
   pendingQ=[];usdPendQ=[];debtPendQ=[];
-  hiddenCats=new Set();renamedCats={};
+  hiddenCats=new Set();renamedCats={};catTypes={};
   currentUID=null;
   auth.signOut();
 }
@@ -1539,9 +1547,10 @@ function attachListeners(){
     if(skipNextSettings){skipNextSettings=false;return;}
     const raw=snap.val();
     if(!raw)return;
-    if(raw.customCats)   cats=[...new Set([...DEF_CATS,...(raw.customCats||[])])];
+    if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
     if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
     if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
+    if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
     if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
     if(raw.persons)      persons=raw.persons||[];
     if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
@@ -1605,8 +1614,22 @@ function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.shar
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function newId(){return String(Date.now())+Math.random().toString(36).slice(2,6);}
-function customCats(){return cats.filter(c=>!DEF_CATS.includes(c));}
+function customCats(){return cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));}
 function displayName(cat){return renamedCats[cat]||cat;} // show renamed label for default cats
+function normalizeCatTypes(map={}){
+  const out={...map};
+  [...DEF_ING_CATS,'Salario','Venta USD'].forEach(c=>{if(!out[c])out[c]='ingreso';});
+  cats.forEach(c=>{if(!out[c])out[c]=DEF_ING_CATS.includes(c)||c==='Salario'||c==='Venta USD'?'ingreso':'egreso';});
+  return out;
+}
+function loadCatTypes(){try{catTypes=normalizeCatTypes(JSON.parse(localStorage.getItem(lsKey(CT_SK)))||{});}catch{catTypes=normalizeCatTypes({});}}
+function saveCatTypes(){try{localStorage.setItem(lsKey(CT_SK),JSON.stringify(catTypes));}catch{}}
+function catTypeFor(cat){return normalizeCatTypes(catTypes)[cat]||'egreso';}
+function setCatType(cat,type){catTypes[cat]=type==='ingreso'?'ingreso':'egreso';saveCatTypes();}
+function catVisibleForCurrentType(cat){
+  const currentType=document.getElementById('f-type')?.value||'Egreso';
+  return currentType==='Ingreso'?catTypeFor(cat)==='ingreso':catTypeFor(cat)!=='ingreso';
+}
 
 // Chart color helpers — adapt to light/dark mode
 function chartTextColor(){return document.body.classList.contains('light')?'rgba(26,16,64,.55)':'rgba(237,232,255,.55)';}
@@ -2266,10 +2289,11 @@ function setType(t){
   document.getElementById('f-type').value=t;
   document.getElementById('btn-eg').className='type-btn'+(t==='Egreso'?' ae':'');
   document.getElementById('btn-in').className='type-btn'+(t==='Ingreso'?' ai':'');
+  buildCatSelect(null);
 }
 function buildCatSelect(selectedCat){
   // Hidden select — still used internally for value
-  const visible=cats.filter(c=>!hiddenCats.has(c));
+  const visible=cats.filter(c=>!hiddenCats.has(c)&&catVisibleForCurrentType(c));
   // Set the search input display text to selected cat (if any)
   const searchEl=document.getElementById('f-cat-search');
   const hiddenEl=document.getElementById('f-cat');
@@ -2302,7 +2326,7 @@ function filterCatDropdown(){
 function renderCatDropdown(q){
   const dd=document.getElementById('cat-dropdown');
   if(!dd)return;
-  const visible=cats.filter(c=>!hiddenCats.has(c));
+  const visible=cats.filter(c=>!hiddenCats.has(c)&&catVisibleForCurrentType(c));
   const filtered=q
     ? visible.filter(c=>
         displayName(c).toLowerCase().includes(q)||
@@ -2344,71 +2368,59 @@ function selectCat(cat){
 function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  cats.push(t);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada`);
+  const type=(document.getElementById('f-type')?.value||'Egreso')==='Ingreso'?'ingreso':'egreso';
+  cats.push(t);setCatType(t,type);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
 }
 function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
 function catOverlayClick(ev){if(ev.target===document.getElementById('cat-overlay'))closeCatManager();}
 function renderCatManager(){
-  const custom=customCats();let html='';
-  // Custom cats
-  if(custom.length>0){
-    html+=`<div class="cat-section-lbl">Personalizadas (${custom.length})</div><div class="cat-manager-list">`;
-    custom.forEach(c=>{
-      html+=`<div class="cat-manager-item">
-        <div class="cat-manager-ico">${catIcon(c)}</div>
-        <div class="cat-manager-name custom">${esc(c)}</div>
-        <span class="cat-manager-badge">Custom</span>
-        <div class="cat-manager-actions">
-          <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
-          <button class="cat-mgr-btn rename" onclick="renameCat('${esc(c)}')">✏️</button>
-          <button class="cat-mgr-btn delete" onclick="confirmDeleteCat('${esc(c)}')">🗑️</button>
-        </div>
-      </div>`;
-    });
-    html+=`</div>`;
-  }else{
-    html+=`<div class="empty" style="padding:16px 0"><div class="empty-ico" style="font-size:32px">🏷️</div><p>No tenés categorías personalizadas.</p></div>`;
-  }
-
-  // Default cats — can rename, change icon, hide
-  const visibleDef=DEF_CATS.filter(c=>!hiddenCats.has(c));
-  const hiddenDef=[...hiddenCats].filter(c=>DEF_CATS.includes(c));
-  html+=`<div class="cat-section-lbl">Predefinidas visibles (${visibleDef.length})</div><div class="cat-manager-list">`;
-  visibleDef.forEach(c=>{
+  catTypes=normalizeCatTypes(catTypes);
+  const byType=type=>cats.filter(c=>catTypeFor(c)===type);
+  const row=(c)=>{
+    const isHidden=hiddenCats.has(c);
+    const isDefault=DEF_CATS.includes(c)||DEF_ING_CATS.includes(c);
     const renamed=renamedCats[c];
-    html+=`<div class="cat-manager-item">
+    const moveTo=catTypeFor(c)==='ingreso'?'egreso':'ingreso';
+    return`<div class="cat-manager-item" style="${isHidden?'opacity:.5':''}">
       <div class="cat-manager-ico">${catIcon(c)}</div>
-      <div class="cat-manager-name default">${esc(displayName(c))}${renamed?`<span style="font-size:9px;color:var(--txt3);margin-left:4px">(original: ${esc(c)})</span>`:''}</div>
+      <div class="cat-manager-name ${isDefault?'default':'custom'}">${esc(displayName(c))}${renamed?`<span style="font-size:9px;color:var(--txt3);margin-left:4px">(original: ${esc(c)})</span>`:''}${isHidden?`<span style="font-size:9px;color:var(--txt3);margin-left:6px">oculta</span>`:''}</div>
+      <span class="cat-manager-badge">${catTypeFor(c)==='ingreso'?'Ingreso':'Egreso'}</span>
       <div class="cat-manager-actions">
         <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
-        <button class="cat-mgr-btn rename" onclick="renameDefCat('${esc(c)}')" title="Renombrar">✏️</button>
-        <button class="cat-mgr-btn" onclick="toggleHideCat('${esc(c)}')" title="Ocultar" style="font-size:12px">👁</button>
+        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat('${esc(c)}')`:`renameCat('${esc(c)}')`}" title="Renombrar">✏️</button>
+        <button class="cat-mgr-btn" onclick="toggleCatType('${esc(c)}')" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
+        <button class="cat-mgr-btn" onclick="toggleHideCat('${esc(c)}')" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
+        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>`}
       </div>
     </div>`;
-  });
-  html+=`</div>`;
-
-  if(hiddenDef.length){
-    html+=`<div class="cat-section-lbl" style="margin-top:12px">Ocultas (${hiddenDef.length})</div><div class="cat-manager-list">`;
-    hiddenDef.forEach(c=>{
-      html+=`<div class="cat-manager-item" style="opacity:.5">
-        <div class="cat-manager-ico">${catIcon(c)}</div>
-        <div class="cat-manager-name default">${esc(displayName(c))}</div>
-        <div class="cat-manager-actions">
-          <button class="cat-mgr-btn" onclick="toggleHideCat('${esc(c)}')" title="Mostrar" style="font-size:12px;color:var(--green)">＋</button>
-        </div>
-      </div>`;
-    });
-    html+=`</div>`;
-  }
-
+  };
+  const egresoCats=byType('egreso');
+  const ingresoCats=byType('ingreso');
+  let html=`<div class="cat-section-lbl">📤 Categorías de egreso (${egresoCats.length})</div><div class="cat-manager-list">`;
+  html+=egresoCats.length?egresoCats.map(row).join(''):`<div class="empty" style="padding:14px 0"><p>Sin categorías de egreso</p></div>`;
+  html+=`</div><button class="btn-save" onclick="addCatTyped('egreso')" style="margin:0 0 10px;padding:11px;font-size:13px">＋ Agregar egreso</button>`;
+  html+=`<div class="cat-section-lbl">📥 Categorías de ingreso (${ingresoCats.length})</div><div class="cat-manager-list">`;
+  html+=ingresoCats.length?ingresoCats.map(row).join(''):`<div class="empty" style="padding:14px 0"><p>Sin categorías de ingreso</p></div>`;
+  html+=`</div><button class="btn-save" onclick="addCatTyped('ingreso')" style="margin:0;padding:11px;font-size:13px;background:linear-gradient(135deg,#4ade80,#22c55e)">＋ Agregar ingreso</button>`;
   document.getElementById('cat-manager-body').innerHTML=html;
+}
+function addCatTyped(type='egreso'){
+  const name=prompt(`Nueva categoría de ${type==='ingreso'?'ingreso':'egreso'}:`);
+  if(!name?.trim())return;
+  const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
+  cats.push(t);setCatType(t,type);saveLocal();pushSettings();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
+}
+function toggleCatType(cat){
+  const next=catTypeFor(cat)==='ingreso'?'egreso':'ingreso';
+  setCatType(cat,next);saveLocal();pushSettings();renderCatManager();buildCatSelect(null);
+  toast(`✅ "${displayName(cat)}" ahora es ${next==='ingreso'?'Ingreso':'Egreso'}`);
 }
 function renameCat(oldName){
   const newName=prompt(`Renombrar "${oldName}" a:`,oldName);if(!newName?.trim()||newName.trim()===oldName)return;
   const t=newName.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   const idx=cats.indexOf(oldName);if(idx>-1)cats[idx]=t;
+  catTypes[t]=catTypeFor(oldName);delete catTypes[oldName];
   expenses=expenses.map(e=>e.category===oldName?{...e,category:t}:e);
   saveLocal();pushSettings();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
   buildCatSelect(t);renderCatManager();renderAll();toast(`✅ "${oldName}" → "${t}"`);
@@ -2758,7 +2770,7 @@ async function doDelete(){
   const{type,id,name}=pendingDel;closeConf();
   if(type==='cat'){
     haptic([30,30,60]);
-    cats=cats.filter(c=>c!==name);saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
+    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
     return;
   }
   if(type==='contact'){
@@ -3625,7 +3637,7 @@ function renderBudgetsSection(){
 }
 function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
 function openBudgetModal(){
-  document.getElementById('bdg-cat').innerHTML=cats.map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
+  document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
   document.getElementById('budget-overlay').classList.add('on');
   setTimeout(()=>document.getElementById('bdg-amt').focus(),200);
@@ -3718,7 +3730,7 @@ function renderStats(mk){
 let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
-  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)).map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
+  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
   document.getElementById('qa-overlay').classList.add('on');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
