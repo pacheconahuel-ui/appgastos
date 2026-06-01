@@ -76,6 +76,25 @@
     .hdr-badge{background:linear-gradient(135deg,rgba(102,126,234,.15),rgba(118,75,162,.15));border:1px solid rgba(102,126,234,.25);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--p1);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .btn-logout{width:28px;height:28px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .18s}
     .btn-logout:hover{background:rgba(248,113,113,.12);color:var(--red);border-color:rgba(248,113,113,.3)}
+    .btn-profile{background:linear-gradient(135deg,rgba(102,126,234,.15),rgba(118,75,162,.15));border:1px solid rgba(102,126,234,.25);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--p1);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .18s}
+    .btn-profile:hover{background:linear-gradient(135deg,rgba(102,126,234,.25),rgba(118,75,162,.25));border-color:rgba(102,126,234,.45)}
+    .profile-avatar-ico{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--p1),var(--p2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+    .profile-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px}
+    .profile-user-card{background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(118,75,162,.10));border:1px solid rgba(102,126,234,.25);border-radius:18px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+    .profile-user-ava{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--p1),var(--p2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+    .profile-user-info{flex:1;min-width:0}
+    .profile-user-name{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile-user-email{font-size:12px;color:var(--txt3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile-sec-lbl{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+    .profile-sec-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+    .profile-action-row{width:100%;padding:13px 15px;background:var(--surf);border:1px solid var(--bdr);border-radius:13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:10px;margin-bottom:8px;transition:all .18s;text-align:left}
+    .profile-action-row:hover{background:var(--surf2);border-color:var(--bdr2)}
+    .profile-action-row .par-ico{font-size:18px;width:26px;text-align:center;flex-shrink:0}
+    .profile-action-row .par-chevron{margin-left:auto;font-size:13px;color:var(--txt3)}
+    .help-section{margin-bottom:10px;border-radius:14px;border:1px solid var(--bdr);overflow:hidden;background:var(--surf)}
+    .help-section-hdr{display:flex;align-items:center;gap:10px;padding:13px 15px;font-size:14px;font-weight:700;cursor:pointer}
+    .help-section-body{padding:0 15px 14px;color:var(--txt2);font-size:13px;line-height:1.6}
+    .help-section-body ul{padding-left:18px;margin-top:6px}
     .sync-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid;transition:all .4s;display:flex;align-items:center;gap:5px;white-space:nowrap}
     .sync-pill .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
     .sync-pill.connecting{background:rgba(102,126,234,.1);color:var(--p1);border-color:rgba(102,126,234,.2)}
@@ -540,11 +559,14 @@
   <div class="hdr">
     <div>
       <div class="hdr-title"><span style="-webkit-text-fill-color:initial;background:none">💸</span> Mis Gastos</div>
-      <div class="hdr-sub" id="hdr-month">— <span style="opacity:.5">v2.1</span></div>
+      <div class="hdr-sub" id="hdr-month">— <span style="opacity:.5">v2.4</span></div>
     </div>
     <div class="hdr-right">
       <div class="hdr-user">
-        <div class="hdr-badge" id="hdr-badge">—</div>
+        <button class="btn-profile" id="btn-profile" onclick="openProfilePanel()" title="Perfil y configuración">
+          <span class="profile-avatar-ico" id="profile-avatar-ico">U</span>
+          <span class="profile-name" id="hdr-badge">—</span>
+        </button>
         <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
         <button class="btn-theme" onclick="openGlobalSearch()" title="Búsqueda global">🔍</button>
         <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
@@ -1252,6 +1274,48 @@
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="m-overlay" id="profile-overlay" onclick="profileOverlayClick(event)">
+  <div class="modal" style="max-height:86vh;overflow-y:auto">
+    <div class="m-handle"></div>
+    <div id="profile-panel-body"></div>
+    <button class="btn-cancel" onclick="closeProfilePanel()">Cerrar</button>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="m-overlay" id="help-overlay" onclick="helpOverlayClick(event)">
+  <div class="modal" style="max-height:86vh;overflow-y:auto">
+    <div class="m-handle"></div>
+    <div class="m-title" style="margin-bottom:18px">❓ Guía rápida</div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>📊</span><span>Resumen y lista</span></div>
+      <div class="help-section-body">Usá <b>Resumen</b> para ver el mes, gráficos, presupuestos y recurrentes. En <b>Lista</b> podés buscar, filtrar, exportar CSV, editar o eliminar movimientos.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>💵</span><span>Billetera USD</span></div>
+      <div class="help-section-body">Anotá ingresos de USD (Wise, efectivo) y ventas P2P. Al vender, la app crea el ingreso ARS automáticamente con el tipo de cambio implícito.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>🤝</span><span>Saldos compartidos</span></div>
+      <div class="help-section-body">Cuando pagás un gasto compartido, activá <b>Dividir con alguien</b> y poné el monto de cada persona. El saldo queda registrado en Saldos y podés saldarlo cuando te transfieran.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>💳</span><span>Tarjetas de crédito</span></div>
+      <div class="help-section-body">Creá una cuenta de tipo Tarjeta en <b>Cuentas</b>. Al agregar un gasto con esa tarjeta, elegís si es único, fijo mensual o en cuotas (X/Y). En la tab Cuentas ves el estimado del próximo resumen y podés pagarlo.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>🔁</span><span>Movimientos recurrentes</span></div>
+      <div class="help-section-body">Marcá un gasto como <b>Movimiento recurrente</b> y el mes siguiente aparecerá en el banner del dashboard para confirmar, editar el monto o saltear.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-hdr"><span>🎯</span><span>Presupuestos y metas</span></div>
+      <div class="help-section-body">Desde el dashboard podés agregar presupuestos por categoría (te avisa cuando te acercás al límite) y metas de ahorro con barra de progreso.</div>
+    </div>
+    <button class="btn-cancel" onclick="closeHelpModal()" style="margin-top:4px">Cerrar</button>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 <div class="conf-overlay" id="conf-overlay">
   <div class="conf-dlg">
@@ -1594,10 +1658,73 @@ function showApp(user){
   document.getElementById('login-screen').classList.toggle('hidden',!!user);
   document.getElementById('app').classList.toggle('hidden',!user);
   if(user){
-    document.getElementById('hdr-badge').textContent=user.displayName||user.email?.split('@')[0]||'Usuario';
+    const name=user.displayName||user.email?.split('@')[0]||'Usuario';
+    document.getElementById('hdr-badge').textContent=name;
+    const ava=document.getElementById('profile-avatar-ico');
+    if(ava)ava.textContent=name.charAt(0).toUpperCase();
     loadTheme();
   }
 }
+
+// --- PROFILE PANEL ---
+function openProfilePanel(){
+  const user=firebase.auth().currentUser;
+  const name=user?.displayName||user?.email?.split('@')[0]||'Usuario';
+  const email=user?.email||'';
+  const initial=name.charAt(0).toUpperCase();
+  const isLight=document.body.classList.contains('light');
+  document.getElementById('profile-panel-body').innerHTML=`
+    <div class="m-title" style="margin-bottom:16px">👤 Perfil</div>
+    <div class="profile-user-card">
+      <div class="profile-user-ava">${initial}</div>
+      <div class="profile-user-info">
+        <div class="profile-user-name">${esc(name)}</div>
+        <div class="profile-user-email">${esc(email)}</div>
+      </div>
+    </div>
+    <div class="profile-sec-lbl">Configuración</div>
+    <button class="profile-action-row" onclick="toggleTheme();renderProfileThemeRow()">
+      <span class="par-ico" id="par-theme-ico">${isLight?'🌙':'☀️'}</span>
+      <span id="par-theme-lbl">${isLight?'Modo oscuro':'Modo claro'}</span>
+      <span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openCatManager()">
+      <span class="par-ico">🏷️</span>Gestionar categorías<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openContactsModal()">
+      <span class="par-ico">👥</span>Contactos<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
+      <span class="par-ico">💼</span>Cuentas y tarjetas<span class="par-chevron">›</span>
+    </button>
+    <div class="profile-sec-lbl">Ayuda</div>
+    <button class="profile-action-row" onclick="closeProfilePanel();openHelpModal()">
+      <span class="par-ico">❓</span>Guía rápida<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openGlobalSearch()">
+      <span class="par-ico">🔍</span>Búsqueda global<span class="par-chevron">›</span>
+    </button>
+    <div class="profile-sec-lbl">Cuenta</div>
+    <button class="profile-action-row" onclick="doLogout()" style="color:var(--red)">
+      <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
+    </button>
+  `;
+  document.getElementById('profile-overlay').classList.add('on');
+}
+function renderProfileThemeRow(){
+  const isLight=document.body.classList.contains('light');
+  const ico=document.getElementById('par-theme-ico');
+  const lbl=document.getElementById('par-theme-lbl');
+  if(ico)ico.textContent=isLight?'🌙':'☀️';
+  if(lbl)lbl.textContent=isLight?'Modo oscuro':'Modo claro';
+}
+function closeProfilePanel(){document.getElementById('profile-overlay').classList.remove('on');}
+function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
+
+// --- HELP MODAL ---
+function openHelpModal(){document.getElementById('help-overlay').classList.add('on');}
+function closeHelpModal(){document.getElementById('help-overlay').classList.remove('on');}
+function helpOverlayClick(ev){if(ev.target===document.getElementById('help-overlay'))closeHelpModal();}
 
 /* ══════════════════════════════════
    HELPERS
@@ -2866,7 +2993,7 @@ function dismissMigration(){document.getElementById('mig-banner').classList.remo
    KEYBOARD
 ══════════════════════════════════ */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();}
+  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 
