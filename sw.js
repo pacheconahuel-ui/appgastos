@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v2.1';
+const CACHE = 'gastos-v2.2';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
@@ -31,6 +31,16 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   // Firebase / auth requests — always go to network
   if (e.request.url.includes('firebase') || e.request.url.includes('googleapis.com/identitytoolkit')) {
+    return;
+  }
+  if (e.request.mode === 'navigate' || e.request.url.endsWith('/AppGastos/') || e.request.url.endsWith('/AppGastos/index.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request).then(cached => cached || caches.match('/AppGastos/index.html')))
+    );
     return;
   }
   e.respondWith(
