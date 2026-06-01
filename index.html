@@ -525,7 +525,7 @@
     <div class="login-divider">o con email</div>
     <div class="login-email-fields">
       <input type="email" class="f-ctrl" id="login-email" placeholder="Email">
-      <input type="password" class="f-ctrl" id="login-pass" placeholder="Contraseña" id="login-pass-field">
+      <input type="password" class="f-ctrl" id="login-pass" placeholder="Contraseña">
     </div>
     <div class="login-err" id="login-err"></div>
     <button class="btn-email" id="btn-email-action" onclick="loginEmail()">Iniciar sesión</button>
@@ -1549,6 +1549,9 @@ function attachListeners(){
     if(raw.budgets)      budgets=raw.budgets||{};
     if(raw.goals)        goals=raw.goals||[];
     saveLocal();
+    saveAccounts();
+    saveBudgets();
+    saveGoals();
     renderAll();
     if(activeTab==='cuentas')renderCuentasTab();
   },err=>console.warn('[FB] settings:',err));
@@ -1584,12 +1587,6 @@ function showApp(user){
   if(user){
     document.getElementById('hdr-badge').textContent=user.displayName||user.email?.split('@')[0]||'Usuario';
     loadTheme();
-    // Firebase Rules expiry warning (expire 2026-05-31)
-    const expiry=new Date('2026-05-31');
-    const daysLeft=Math.ceil((expiry-new Date())/(1000*60*60*24));
-    if(daysLeft<=14&&daysLeft>0){
-      setTimeout(()=>toast(`⚠️ Firebase Rules vencen en ${daysLeft} días — actualizalas`,5000),3000);
-    }
   }
 }
 
@@ -1702,7 +1699,7 @@ function renderPieChart(mk){
   box.classList.remove('hidden');
   const ctx=document.getElementById('pie').getContext('2d');
   if(chart){chart.destroy();chart=null;}
-  chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:2,borderColor:chartBorderSep()}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),padding:12,font:{family:'Outfit',size:11,weight:'600'},boxWidth:11,boxHeight:11}},tooltip:{callbacks:{label:c=>`  ${fmt(c.raw)}`},bodyFont:{family:'JetBrains Mono',size:13},backgroundColor:chartBgColor(),borderColor:'rgba(102,126,234,.35)',borderWidth:1,padding:10,cornerRadius:10}}}}});
+  chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:2,borderColor:chartBorderSep()}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),padding:12,font:{family:'Outfit',size:11,weight:'600'},boxWidth:11,boxHeight:11}},tooltip:{callbacks:{label:c=>`  ${fmt(c.raw)}`},bodyFont:{family:'JetBrains Mono',size:13},backgroundColor:chartBgColor(),borderColor:'rgba(102,126,234,.35)',borderWidth:1,padding:10,cornerRadius:10}}}});
 }
 
 function renderListSec(){
@@ -2217,6 +2214,7 @@ function onAccountSelected(){
     cardWrap.style.display='none';
   }
 }
+function openModal(data=null){
   document.getElementById('m-title').textContent=data?'Editar Gasto':'Nuevo Gasto';
   document.getElementById('f-id').value=data?.id||'';
   document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
