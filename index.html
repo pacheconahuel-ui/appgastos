@@ -600,6 +600,15 @@
 
   <!-- DASHBOARD -->
   <div class="sec on" id="tab-dashboard">
+    <!-- Month navigator -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:10px 14px">
+      <button onclick="dashNavMonth(-1)" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">‹</button>
+      <div style="text-align:center">
+        <div style="font-size:15px;font-weight:700" id="dash-month-label">—</div>
+        <div style="font-size:10px;color:var(--txt3)" id="dash-month-hint"></div>
+      </div>
+      <button onclick="dashNavMonth(1)" id="dash-next-btn" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">›</button>
+    </div>
     <div class="cards">
       <div class="card"><div class="card-lbl">Ingresos</div><div class="card-val g" id="c-ing">$0</div></div>
       <div class="card"><div class="card-lbl">Pagaste</div><div class="card-val r" id="c-pag">$0</div><div class="card-hint">total abonado</div></div>
@@ -625,7 +634,7 @@
     <!-- Metas -->
     <div id="goals-section"></div>
     <div class="chart-box hidden" id="chart-box">
-      <div class="box-title">Distribución por categoría</div>
+      <div class="box-title" id="chart-box-title">Distribución por categoría</div>
       <div class="chart-wrap tall"><canvas id="pie"></canvas></div>
     </div>
     <!-- Month comparison chart -->
@@ -633,7 +642,7 @@
       <div class="box-title">Últimos 6 meses <span class="box-title-sub" id="monthly-chart-sub"></span></div>
       <div class="chart-wrap"><canvas id="monthly-chart"></canvas></div>
     </div>
-    <div class="div-lbl">Últimos movimientos</div>
+    <div class="div-lbl">Últimos 10 movimientos</div>
     <div id="recent-list"></div>
   </div>
 
@@ -1366,8 +1375,9 @@ let cats=[],pendingQ=[],usdPendQ=[],debtPendQ=[];
 let hiddenCats=new Set();   // default cats hidden by user
 let renamedCats={};          // {originalName: renamedTo}
 let catTypes={};              // {categoryName: 'egreso'|'ingreso'}
-let chart=null,tcChart=null;
+let chart=null,tcChart=null,monthlyChart=null;
 let pendingDel=null;
+let dashMk=null; // month shown on dashboard — null means auto (most recent with data or current)
 let fbOnline=false,fbReady=false,db=null,auth=null,currentUID=null;
 let skipNextArs=false,skipNextUsd=false,skipNextDebt=false,skipNextSettings=false;
 let activeTab='dashboard';
@@ -1864,24 +1874,70 @@ function personDebtsSettled(personId){return debts.filter(d=>d.personId===person
 ══════════════════════════════════ */
 function renderAll(){renderDashboard();renderListSec();renderUsdTab();renderSaldosTab();if(activeTab==='cuentas')renderCuentasTab();}
 
+function getDashMk(){
+  // If user hasn't navigated, auto-pick: current month if it has data, else most recent month with data
+  if(dashMk)return dashMk;
+  const cur=nowKey();
+  if(expenses.some(e=>monthKey(e.date)===cur))return cur;
+  const months=allMonths().filter(m=>expenses.some(e=>monthKey(e.date)===m));
+  return months.length?months[0]:cur;
+}
+
+function dashNavMonth(dir){
+  const months=allMonths();
+  const cur=getDashMk();
+  const idx=months.indexOf(cur);
+  const newIdx=idx+(-dir); // allMonths is desc so ‹ = forward in array = older
+  if(newIdx>=0&&newIdx<months.length){dashMk=months[newIdx];renderDashboard();}
+}
+
 function renderDashboard(){
-  const mk=nowKey();
-  document.getElementById('hdr-month').textContent=monthLabel(mk);
+  const mk=getDashMk();
+  const cur=nowKey();
+  const isCurrent=mk===cur;
+
+  // Month navigator
+  const months=allMonths();
+  const idx=months.indexOf(mk);
+  document.getElementById('dash-month-label').textContent=monthLabel(mk);
+  document.getElementById('dash-month-hint').textContent=isCurrent?'mes actual':(mk===months[0]&&!isCurrent?'mes más reciente':'');
+  // Disable next button if already on current/most recent
+  const nextBtn=document.getElementById('dash-next-btn');
+  if(nextBtn)nextBtn.style.opacity=idx<=0?'.3':'1';
+
+  // Update header subtitle
+  const hdrSub=document.getElementById('hdr-month');
+  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v2.4</span>`;
+
   const{ing,pag,real,bal}=calcSummary(mk);
   document.getElementById('c-ing').textContent=fmt(ing);
   document.getElementById('c-pag').textContent=fmt(pag);
   document.getElementById('c-real').textContent=fmt(real);
   const balEl=document.getElementById('c-bal');
   balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');
+
+  // Chart title with month
+  const chartTitle=document.getElementById('chart-box-title');
+  if(chartTitle)chartTitle.textContent=`Distribución — ${monthLabel(mk)}`;
+
   renderPieChart(mk);
   renderMonthlyChart();
-  renderProjection();
-  renderRecurringReminders();
+  if(isCurrent){renderProjection();renderRecurringReminders();}
+  else{
+    document.getElementById('proj-card').style.display='none';
+    document.getElementById('recurring-reminders').innerHTML='';
+  }
   renderBudgetsSection();
   renderGoalsSection();
   renderStats(mk);
-  const recent=[...expenses].filter(e=>monthKey(e.date)===mk).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt).slice(0,5);
-  document.getElementById('recent-list').innerHTML=recent.length?recent.map(e=>expHTML(e,false)).join(''):'<div class="empty"><div class="empty-ico">📭</div><p>Sin gastos este mes</p></div>';
+
+  // Últimos 10 movimientos — ALL months, not just current
+  const recent=[...expenses]
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)
+    .slice(0,10);
+  document.getElementById('recent-list').innerHTML=recent.length
+    ?recent.map(e=>expHTML(e,false)).join('')
+    :'<div class="empty"><div class="empty-ico">📭</div><p>Sin movimientos cargados</p></div>';
 }
 
 function renderPieChart(mk){
@@ -3246,7 +3302,7 @@ function preloadRecurring(templateId){
 /* ══════════════════════════════════
    MONTH COMPARISON CHART
 ══════════════════════════════════ */
-let monthlyChart=null;
+// monthlyChart declared in state above
 function renderMonthlyChart(){
   const months=[];
   const now=new Date();
@@ -3282,7 +3338,9 @@ function renderMonthlyChart(){
    PROJECTION CARD
 ══════════════════════════════════ */
 function renderProjection(){
-  const mk=nowKey();
+  const mk=getDashMk();
+  const cur=nowKey();
+  if(mk!==cur){document.getElementById('proj-card').style.display='none';return;}
   const today=new Date();
   const dayOfMonth=today.getDate();
   const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
@@ -3793,7 +3851,7 @@ let budgets={};
 function loadBudgets(){try{budgets=JSON.parse(localStorage.getItem(lsKey(BDG_SK)))||{};}catch{budgets={};}}
 function saveBudgets(){try{localStorage.setItem(lsKey(BDG_SK),JSON.stringify(budgets));}catch(e){}}
 function renderBudgetsSection(){
-  const mk=nowKey(),catData=calcByCat(mk),budgetCats=Object.keys(budgets);
+  const mk=getDashMk(),catData=calcByCat(mk),budgetCats=Object.keys(budgets);
   const el=document.getElementById('budgets-section');
   if(!budgetCats.length){el.innerHTML='';return;}
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Presupuestos</div><button onclick="openBudgetModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Agregar</button></div>`;
