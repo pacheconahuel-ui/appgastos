@@ -1547,7 +1547,17 @@ async function persistDebt(debt,removeId){  saveLocal();
 /* ══════════════════════════════════
    AUTH
 ══════════════════════════════════ */
-function loginGoogle(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>document.getElementById('login-err').textContent=e.message);}
+function loginGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  // Use redirect on mobile/PWA (popup gets blocked), popup on desktop
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  if(isMobile||isPWA){
+    auth.signInWithRedirect(provider).catch(e=>document.getElementById('login-err').textContent=e.message);
+  } else {
+    auth.signInWithPopup(provider).catch(e=>document.getElementById('login-err').textContent=e.message);
+  }
+}
 function loginEmail(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
@@ -1657,9 +1667,17 @@ function initFirebase(){
       if(user){
         currentUID=user.uid;loadLocal();renderAll();attachListeners();showApp(user);
         setTimeout(checkMigration,1500);
-        // Push existing local settings to Firebase on first login
         setTimeout(pushSettings,2000);
       }else showApp(null);
+    });
+    // Handle redirect result (from signInWithRedirect on mobile)
+    auth.getRedirectResult().then(result=>{
+      if(result?.user) console.log('[Auth] Redirect sign-in OK:', result.user.email);
+    }).catch(e=>{
+      if(e.code!=='auth/no-current-user'){
+        console.warn('[Auth] Redirect error:',e.message);
+        document.getElementById('login-err').textContent=e.message;
+      }
     });
   }catch(e){console.error('[Firebase] Init failed:',e);setStatus('offline','⚠ Sin Firebase');fbReady=true;showApp(null);}
 }
