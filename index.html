@@ -1665,7 +1665,11 @@ function initFirebase(){
     });
     auth.onAuthStateChanged(user=>{
       if(user){
-        currentUID=user.uid;loadLocal();renderAll();attachListeners();showApp(user);
+        currentUID=user.uid;
+        loadLocal();
+        try{renderAll();}catch(e){console.error('[render] Error on auth load:',e);}
+        attachListeners();
+        showApp(user);
         setTimeout(checkMigration,1500);
         setTimeout(pushSettings,2000);
       }else showApp(null);
@@ -1914,46 +1918,49 @@ function renderDashboard(){
   const cur=nowKey();
   const isCurrent=mk===cur;
 
-  // Month navigator
+  // Month navigator — null-safe
   const months=allMonths();
   const idx=months.indexOf(mk);
-  document.getElementById('dash-month-label').textContent=monthLabel(mk);
-  document.getElementById('dash-month-hint').textContent=isCurrent?'mes actual':(mk===months[0]&&!isCurrent?'mes más reciente':'');
-  // Disable next button if already on current/most recent
+  const monthLabel_el=document.getElementById('dash-month-label');
+  if(monthLabel_el)monthLabel_el.textContent=monthLabel(mk);
+  const monthHint_el=document.getElementById('dash-month-hint');
+  if(monthHint_el)monthHint_el.textContent=isCurrent?'mes actual':(mk===months[0]&&!isCurrent?'mes más reciente':'');
   const nextBtn=document.getElementById('dash-next-btn');
   if(nextBtn)nextBtn.style.opacity=idx<=0?'.3':'1';
 
-  // Update header subtitle
+  // Header subtitle
   const hdrSub=document.getElementById('hdr-month');
   if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v2.4</span>`;
 
   const{ing,pag,real,bal}=calcSummary(mk);
-  document.getElementById('c-ing').textContent=fmt(ing);
-  document.getElementById('c-pag').textContent=fmt(pag);
-  document.getElementById('c-real').textContent=fmt(real);
+  const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
+  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
+  const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real);
   const balEl=document.getElementById('c-bal');
-  balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');
+  if(balEl){balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');}
 
-  // Chart title with month
   const chartTitle=document.getElementById('chart-box-title');
   if(chartTitle)chartTitle.textContent=`Distribución — ${monthLabel(mk)}`;
 
-  renderPieChart(mk);
-  renderMonthlyChart();
-  if(isCurrent){renderProjection();renderRecurringReminders();}
-  else{
-    document.getElementById('proj-card').style.display='none';
-    document.getElementById('recurring-reminders').innerHTML='';
+  try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
+  try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
+  if(isCurrent){
+    try{renderProjection();}catch(e){console.warn('projection:',e);}
+    try{renderRecurringReminders();}catch(e){console.warn('reminders:',e);}
+  } else {
+    const pc=document.getElementById('proj-card'); if(pc)pc.style.display='none';
+    const rr=document.getElementById('recurring-reminders'); if(rr)rr.innerHTML='';
   }
-  renderBudgetsSection();
-  renderGoalsSection();
-  renderStats(mk);
+  try{renderBudgetsSection();}catch(e){console.warn('budgets:',e);}
+  try{renderGoalsSection();}catch(e){console.warn('goals:',e);}
+  try{renderStats(mk);}catch(e){console.warn('stats:',e);}
 
-  // Últimos 10 movimientos — ALL months, not just current
+  // Últimos 10 movimientos — todos los meses
   const recent=[...expenses]
     .sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)
     .slice(0,10);
-  document.getElementById('recent-list').innerHTML=recent.length
+  const recentEl=document.getElementById('recent-list');
+  if(recentEl)recentEl.innerHTML=recent.length
     ?recent.map(e=>expHTML(e,false)).join('')
     :'<div class="empty"><div class="empty-ico">📭</div><p>Sin movimientos cargados</p></div>';
 }
