@@ -1704,6 +1704,11 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="closeProfilePanel();openGlobalSearch()">
       <span class="par-ico">🔍</span>Búsqueda global<span class="par-chevron">›</span>
     </button>
+    <div class="profile-sec-lbl">Diagnóstico</div>
+    <button class="profile-action-row" onclick="runDiagnostics()">
+      <span class="par-ico">🔬</span>Verificar datos en Firebase<span class="par-chevron">›</span>
+    </button>
+    <div id="diag-result"></div>
     <div class="profile-sec-lbl">Cuenta</div>
     <button class="profile-action-row" onclick="doLogout()" style="color:var(--red)">
       <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
@@ -1720,6 +1725,43 @@ function renderProfileThemeRow(){
 }
 function closeProfilePanel(){document.getElementById('profile-overlay').classList.remove('on');}
 function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
+
+async function runDiagnostics(){
+  const el=document.getElementById('diag-result');
+  if(!el)return;
+  el.innerHTML='<div style="color:var(--txt3);font-size:12px;padding:8px 0">⏳ Consultando Firebase…</div>';
+  try{
+    const uid=firebase.auth().currentUser?.uid||'sin sesión';
+    const email=firebase.auth().currentUser?.email||'';
+    const [snapG, snapU, snapD] = await Promise.all([
+      db.ref(`usuarios/${uid}/gastos`).once('value'),
+      db.ref(`usuarios/${uid}/usd`).once('value'),
+      db.ref(`usuarios/${uid}/debts`).once('value'),
+    ]);
+    const fbG=snapG.val()?Object.keys(snapG.val()).length:0;
+    const fbU=snapU.val()?Object.keys(snapU.val()).length:0;
+    const fbD=snapD.val()?Object.keys(snapD.val()).length:0;
+    const colorG=fbG>0?'var(--green)':'var(--red)';
+    const colorU=fbU>0?'var(--green)':'var(--txt3)';
+    let msg='';
+    if(fbG>expenses.length) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Hay más datos en Firebase que en pantalla — cerrá sesión, volvé a entrar</div>';
+    else if(fbG===0&&expenses.length===0) msg='<div style="color:var(--red);font-size:11px;margin-top:6px">❌ Sin datos — revisá que sea la cuenta correcta</div>';
+    else if(fbG>0&&expenses.length===0) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Datos en Firebase pero no cargados — cerrá sesión y volvé a entrar</div>';
+    else msg='<div style="color:var(--green);font-size:11px;margin-top:6px">✅ Datos sincronizados correctamente</div>';
+    el.innerHTML=`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-top:8px;font-size:12px;line-height:2">
+      <div>🔑 UID: <code style="font-size:10px;color:var(--txt3)">${uid.substring(0,16)}…</code></div>
+      <div>📧 Email: <b>${esc(email)}</b></div>
+      <div>☁️ Gastos en Firebase: <b style="color:${colorG}">${fbG}</b></div>
+      <div>💵 USD en Firebase: <b style="color:${colorU}">${fbU}</b></div>
+      <div>🤝 Deudas en Firebase: <b style="color:var(--txt3)">${fbD}</b></div>
+      <div>📱 Gastos en pantalla: <b>${expenses.length}</b></div>
+      <div>🌐 Online: <b style="color:${fbOnline?'var(--green)':'var(--red)'}">${fbOnline?'Sí':'No'}</b></div>
+      ${msg}
+    </div>`;
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px;padding:8px;background:var(--surf);border-radius:10px">❌ Error al consultar: ${esc(e.message)}</div>`;
+  }
+}
 
 // --- HELP MODAL ---
 function openHelpModal(){document.getElementById('help-overlay').classList.add('on');}
