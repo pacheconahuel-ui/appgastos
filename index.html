@@ -2162,7 +2162,7 @@ function expHTML(e,actions){
   return`<div class="exp-item swipeable" data-id="${e.id}" onclick="editExp('${e.id}',event)">
     <div class="exp-ico purple-bg">${icon(e.category)}</div>
     <div class="exp-info">
-      <div class="exp-desc">${esc(e.description||e.category)} ${pending}</div>
+      <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
       <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}</div>
     </div>
@@ -2609,7 +2609,9 @@ function renderCatManager(){
     const moveTo=catTypeFor(c)==='ingreso'?'egreso':'ingreso';
     return`<div class="cat-manager-item" style="${isHidden?'opacity:.5':''}">
       <div class="cat-manager-ico">${catIcon(c)}</div>
-      <div class="cat-manager-name ${isDefault?'default':'custom'}">${esc(displayName(c))}${renamed?`<span style="font-size:9px;color:var(--txt3);margin-left:4px">(original: ${esc(c)})</span>`:''}${isHidden?`<span style="font-size:9px;color:var(--txt3);margin-left:6px">oculta</span>`:''}</div>
+      <div class="cat-manager-name ${isDefault?'default':'custom'}" title="${renamed?`Original: ${esc(c)}`:''}">
+        ${esc(displayName(c))}${isHidden?`<span style="font-size:9px;color:var(--txt3);margin-left:6px">oculta</span>`:''}
+      </div>
       <span class="cat-manager-badge">${catTypeFor(c)==='ingreso'?'Ingreso':'Egreso'}</span>
       <div class="cat-manager-actions">
         <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
@@ -2652,13 +2654,13 @@ function renameCat(oldName){
 }
 
 function renameDefCat(originalName){
-  // Rename display label only — data still stored under original key
   const current=renamedCats[originalName]||originalName;
   const newLabel=prompt(`Renombrar "${current}" a:`,current);
   if(!newLabel?.trim()||newLabel.trim()===current)return;
   renamedCats[originalName]=newLabel.trim();
   saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
-  toast(`✅ "${originalName}" ahora se muestra como "${newLabel.trim()}"`);
+  renderAll(); // update existing expenses, charts, filters
+  toast(`✅ Listo — ahora se llama "${newLabel.trim()}" en todos lados`);
 }
 
 function toggleHideCat(cat){
