@@ -1354,6 +1354,29 @@
   </div>
 </div>
 
+<!-- ADJUST MODAL -->
+<div class="m-overlay" id="adjust-overlay" onclick="adjustOverlayClick(event)">
+  <div class="modal">
+    <div class="m-handle"></div>
+    <div class="m-title">⚖️ Ajustar saldo</div>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.5">
+      Usá esto cuando la app no coincide con tu billetera real.<br>
+      Se crea un movimiento con la diferencia para corregir el saldo.
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Billetera</label>
+      <select class="f-ctrl" id="adj-acc" onchange="updateAdjHint()"></select>
+    </div>
+    <div class="f-grp">
+      <label class="f-lbl">Saldo real ahora ($)</label>
+      <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="decimal" step="any" min="0" oninput="updateAdjHint()">
+    </div>
+    <div id="adj-hint" style="background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:11px 13px;font-size:13px;color:var(--txt3);margin-bottom:14px;min-height:44px;display:flex;align-items:center"></div>
+    <button class="btn-save" onclick="saveAdjust()">✅ Registrar ajuste</button>
+    <button class="btn-cancel" onclick="closeAdjustModal()">Cancelar</button>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 <div class="conf-overlay" id="conf-overlay">
   <div class="conf-dlg">
@@ -3048,10 +3071,6 @@ function delUsdTx(id,ev){
 function closeConf(){
   pendingDel=null;
   document.getElementById('conf-overlay').classList.remove('on');
-  // Reset to default delete dialog in case adjust modal changed it
-  document.getElementById('conf-ico').textContent='🗑️';
-  document.getElementById('conf-ttl').textContent='¿Eliminar?';
-  document.getElementById('conf-btns').innerHTML=`<button class="btn-no" onclick="closeConf()">Cancelar</button><button class="btn-yes" onclick="doDelete()">Eliminar</button>`;
 }
 
 async function doDelete(){
@@ -3155,7 +3174,7 @@ function dismissMigration(){document.getElementById('mig-banner').classList.remo
    KEYBOARD
 ══════════════════════════════════ */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();}
+  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 
@@ -4103,41 +4122,19 @@ function togglePatrimonio(){
 function openAdjustModal(accId, ev){
   ev?.stopPropagation();
   const wallets = walletAccounts();
-  if(!wallets.length){ toast('⚠️ Primero creá una billetera'); return; }
-
-  const a = accId ? accounts.find(x => x.id === accId) : null;
-  const currentBal = a ? accountBalance(a.id) : null;
+  if(!wallets.length){ toast('⚠️ Primero creá una billetera en la tab Cuentas'); return; }
 
   const opts = wallets.map(w =>
     `<option value="${w.id}" ${w.id === accId ? 'selected' : ''}>${w.emoji} ${esc(w.name)}</option>`
   ).join('');
-
-  // Reuse the generic confirm modal as a simple dialog
-  document.getElementById('conf-ico').textContent = '⚖️';
-  document.getElementById('conf-ttl').textContent = 'Registrar ajuste de saldo';
-  document.getElementById('conf-txt').textContent =
-    `Usá esto cuando la app no coincide con la billetera real.\nSe crea un ingreso o gasto de "Ajuste" con la diferencia.`;
-
-  // Replace confirm buttons with a custom form
-  document.getElementById('conf-btns').innerHTML = `
-    <div style="width:100%;text-align:left">
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Billetera</label>
-        <select class="f-ctrl" id="adj-acc" style="width:100%" onchange="updateAdjHint()">${opts}</select>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Saldo real ahora ($)</label>
-        <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="decimal" step="any" oninput="updateAdjHint()">
-      </div>
-      <div id="adj-hint" style="font-size:12px;color:var(--txt3);margin-bottom:14px;min-height:18px"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-yes" style="background:rgba(102,126,234,.15)!important;color:var(--p1)!important;border-color:rgba(102,126,234,.3)!important" onclick="saveAdjust()">✅ Registrar</button>
-        <button class="btn-no" onclick="closeConf()">Cancelar</button>
-      </div>
-    </div>`;
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('adj-acc').innerHTML = opts;
+  document.getElementById('adj-real').value = '';
+  document.getElementById('adj-hint').textContent = 'Escribí el saldo real para ver la diferencia';
+  document.getElementById('adjust-overlay').classList.add('on');
   setTimeout(() => document.getElementById('adj-real')?.focus(), 200);
 }
+function closeAdjustModal(){ document.getElementById('adjust-overlay').classList.remove('on'); }
+function adjustOverlayClick(ev){ if(ev.target === document.getElementById('adjust-overlay')) closeAdjustModal(); }
 
 function updateAdjHint(){
   const accId = document.getElementById('adj-acc')?.value;
@@ -4160,7 +4157,7 @@ async function saveAdjust(){
   if(!accId || isNaN(realVal)){ toast('⚠️ Completá los datos'); return; }
   const appBal = accountBalance(accId);
   const diff = realVal - appBal;
-  if(diff === 0){ closeConf(); toast('✅ Sin diferencia, no se hizo nada'); return; }
+  if(diff === 0){ closeAdjustModal(); toast('✅ Sin diferencia, el saldo ya coincide'); return; }
   const acc = accounts.find(a => a.id === accId);
   const exp = {
     id: newId(),
@@ -4175,7 +4172,7 @@ async function saveAdjust(){
     createdAt: Date.now(), updatedAt: Date.now()
   };
   expenses.push(exp);
-  closeConf(); haptic(); renderAll();
+  closeAdjustModal(); haptic(); renderAll();
   toast(`✅ Ajuste de ${fmt(Math.abs(diff))} registrado en ${acc?.name}`);
   skipNextArs = fbOnline; await persistArs(exp, null);
 }
