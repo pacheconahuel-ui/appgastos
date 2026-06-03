@@ -1750,7 +1750,65 @@ function showApp(user){
   }
 }
 
-// --- PROFILE PANEL ---
+// --- BACK BUTTON HANDLER (Android PWA) ---
+// Push a state when any modal opens, pop it on close
+// Double-back to exit when no modal is open
+
+let _backExitTimer = null;
+let _modalOpen = false;
+
+function pushModalState(){
+  _modalOpen = true;
+  history.pushState({modal:true}, '');
+}
+function popModalState(){
+  // Only pop if we pushed (avoid double-pop)
+  if(_modalOpen){
+    _modalOpen = false;
+    // Don't call history.back() here — let the popstate handler do it
+  }
+}
+
+window.addEventListener('popstate', e => {
+  // If a modal is open, close it instead of going back
+  const anyOpen = [
+    'm-overlay','usd-overlay','debt-overlay','settle-overlay',
+    'cat-overlay','contacts-overlay','add-contact-overlay',
+    'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
+    'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
+    'help-overlay','adjust-overlay','conf-overlay'
+  ].some(id => document.getElementById(id)?.classList.contains('on'));
+
+  if(anyOpen){
+    // Close whatever is open
+    closeModal();closeUsdModal();closeDebtModal();closeSettleModal();
+    closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
+    closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
+    closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
+    closeHelpModal();closeAdjustModal();
+    // Re-push state so next back also gets caught
+    history.pushState({modal:true}, '');
+    _modalOpen = true;
+    return;
+  }
+
+  // No modal open — double-back to exit
+  if(_backExitTimer){
+    // Second back within 2s — let the app close
+    clearTimeout(_backExitTimer);
+    _backExitTimer = null;
+    return;
+  }
+  // First back — show toast and push state back
+  toast('↩ Tocá atrás de nuevo para salir', 2000);
+  history.pushState({}, '');
+  _backExitTimer = setTimeout(() => { _backExitTimer = null; }, 2000);
+});
+
+// Push initial state so the first back is caught
+history.pushState({}, '');
+
+
 function openProfilePanel(){
   const user=firebase.auth().currentUser;
   const name=user?.displayName||user?.email?.split('@')[0]||'Usuario';
@@ -1798,7 +1856,7 @@ function openProfilePanel(){
       <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
     </button>
   `;
-  document.getElementById('profile-overlay').classList.add('on');
+  document.getElementById('profile-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function renderProfileThemeRow(){
   const isLight=document.body.classList.contains('light');
@@ -1848,7 +1906,7 @@ async function runDiagnostics(){
 }
 
 // --- HELP MODAL ---
-function openHelpModal(){document.getElementById('help-overlay').classList.add('on');}
+function openHelpModal(){document.getElementById('help-overlay').classList.add('on');history.pushState({modal:true},'');}
 function closeHelpModal(){document.getElementById('help-overlay').classList.remove('on');}
 function helpOverlayClick(ev){if(ev.target===document.getElementById('help-overlay'))closeHelpModal();}
 
@@ -1914,7 +1972,7 @@ function confirmDeleteCat(name){
   document.getElementById('conf-txt').textContent=inUse
     ?`"${name}" se usa en gastos existentes.\nSe eliminará solo la categoría, los gastos quedan intactos.\n¿Eliminar igual?`
     :`¿Eliminar la categoría "${name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function personById(id){return persons.find(p=>p.id===id);}
 
@@ -2364,7 +2422,7 @@ let _contactForSplit=false; // flag: opened from split panel
 
 function openContactsModal(){
   renderContactsList();
-  document.getElementById('contacts-overlay').classList.add('on');
+  document.getElementById('contacts-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function closeContactsModal(){document.getElementById('contacts-overlay').classList.remove('on');}
 function contactsOverlayClick(ev){if(ev.target===document.getElementById('contacts-overlay'))closeContactsModal();}
@@ -2409,7 +2467,7 @@ function confirmDeleteContact(personId){
   document.getElementById('conf-txt').textContent=
     (hasDebts?`"${p.name}" tiene saldos pendientes.\n`:``) +
     `¿Eliminar el contacto "${p.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
 // Add contact type to doDelete — handled below in doDelete
@@ -2424,7 +2482,7 @@ function openAddContactModal(personId=null, forSplit=false){
   document.getElementById('ac-name').value=p?.name||'';
   document.getElementById('ac-emoji-preview').textContent=p?.emoji||'👤';
   setContactType(p?(p.isRecurrent?'recurrent':'occasional'):'recurrent');
-  document.getElementById('add-contact-overlay').classList.add('on');
+  document.getElementById('add-contact-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('ac-name').focus(),200);
 }
 function closeAddContactModal(){document.getElementById('add-contact-overlay').classList.remove('on');}
@@ -2587,7 +2645,7 @@ function openModal(data=null){
   document.getElementById('split-toggle-ico').textContent=splitPanelOpen?'−':'＋';
   if(splitPanelOpen)renderSplitRows();
   recalcSplit();
-  document.getElementById('m-overlay').classList.add('on');
+  document.getElementById('m-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('f-amt').focus(),200);
 }
 function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;}
@@ -2678,7 +2736,7 @@ function addCatPrompt(){
   const type=(document.getElementById('f-type')?.value||'Egreso')==='Ingreso'?'ingreso':'egreso';
   cats.push(t);setCatType(t,type);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
 }
-function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');}
+function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');history.pushState({modal:true},'');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
 function catOverlayClick(ev){if(ev.target===document.getElementById('cat-overlay'))closeCatManager();}
 function renderCatManager(){
@@ -2848,7 +2906,7 @@ function openUsdModal(data){
   document.getElementById('uf-acc-ingreso').value=data?.accountId||'';
   document.getElementById('uf-acc-venta').value=data?.arsAccountId||'';
   setUsdType(data?.type||'ingreso');calcTC();
-  document.getElementById('usd-overlay').classList.add('on');
+  document.getElementById('usd-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('uf-usd').focus(),200);
 }
 function closeUsdModal(){document.getElementById('usd-overlay').classList.remove('on');}
@@ -2921,7 +2979,7 @@ function openDebtModal(data){
   buildDebtPersonSelect();
   if(data?.personId)document.getElementById('df-person').value=data.personId;
   setDebtDir(data?(data.amount>0?'me-deben':'yo-debo'):'me-deben');
-  document.getElementById('debt-overlay').classList.add('on');
+  document.getElementById('debt-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('df-amt').focus(),200);
 }
 function closeDebtModal(){document.getElementById('debt-overlay').classList.remove('on');}
@@ -2970,7 +3028,7 @@ function deleteDebt(id,ev){
   document.getElementById('conf-txt').textContent=d
     ?`"${d.description}" · ${fmt(Math.abs(d.amount))}\nEsta acción no se puede deshacer.`
     :'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
 /* ══════════════════════════════════
@@ -2996,7 +3054,7 @@ function openSettleModal(personId){
     accWrap.style.display='block';
   } else { accWrap.style.display='none'; }
   setSettleType('transfer');
-  document.getElementById('settle-overlay').classList.add('on');
+  document.getElementById('settle-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function closeSettleModal(){document.getElementById('settle-overlay').classList.remove('on');}
 function settleOverlayClick(ev){if(ev.target===document.getElementById('settle-overlay'))closeSettleModal();}
@@ -3064,14 +3122,14 @@ function delExp(id,ev){
   ev?.stopPropagation();pendingDel={type:'ars',id};
   const e=expenses.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=e?`"${e.description}" · ${fmt(e.amount)}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function editUsdTx(id,ev){ev?.stopPropagation();const t=usdTx.find(x=>x.id===id);if(t)openUsdModal(t);}
 function delUsdTx(id,ev){
   ev?.stopPropagation();pendingDel={type:'usd',id};
   const t=usdTx.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=t?`"${t.description}" · ${fmtU(t.usdAmount)}${t.linkedArsId?'\n(también se eliminará el ingreso ARS asociado)':''}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function closeConf(){
   pendingDel=null;
@@ -3463,7 +3521,7 @@ function oldDebtAlerts(){
    GLOBAL SEARCH
 ══════════════════════════════════ */
 function openGlobalSearch(){
-  document.getElementById('gsearch-overlay').classList.add('on');
+  document.getElementById('gsearch-overlay').classList.add('on');history.pushState({modal:true},'');
   document.getElementById('gsearch-inp').value='';
   document.getElementById('gsearch-results').innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">🔍</div><p>Escribí para buscar en todo</p></div>';
   setTimeout(()=>document.getElementById('gsearch-inp').focus(),200);
@@ -3719,7 +3777,7 @@ function openAccountModal(id=null,ev=null){
     walletAccounts().filter(w=>w.id!==id).map(w=>`<option value="${w.id}">${w.emoji} ${esc(w.name)}</option>`).join('');
   pw.value=a?.payWalletId||'';
   setAccType(a?.type||'wallet');
-  document.getElementById('account-overlay').classList.add('on');
+  document.getElementById('account-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('acc-name').focus(),200);
 }
 function closeAccountModal(){document.getElementById('account-overlay').classList.remove('on');}
@@ -3757,7 +3815,7 @@ function confirmDeleteAccount(id,ev){
   ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
   pendingDel={type:'account',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar "${a?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
 // ── CC PAYMENT MODAL ──
@@ -3804,7 +3862,7 @@ function openCCPayModal(accId){
   }
   // Default pay mode: mix if there are USD items, ars otherwise
   setCCPayMode(totalUSD>0?'mix':'ars');
-  document.getElementById('cc-pay-overlay').classList.add('on');
+  document.getElementById('cc-pay-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 function closeCCPayModal(){document.getElementById('cc-pay-overlay').classList.remove('on');}
 function ccPayOverlayClick(ev){if(ev.target===document.getElementById('cc-pay-overlay'))closeCCPayModal();}
@@ -3910,7 +3968,7 @@ function openTransferModal(){
   if(accounts.length>1)document.getElementById('tf-to').selectedIndex=1;
   document.getElementById('tf-amt').value='';document.getElementById('tf-desc').value='';
   document.getElementById('tf-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('transfer-overlay').classList.add('on');
+  document.getElementById('transfer-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('tf-amt').focus(),200);
 }
 function closeTransferModal(){document.getElementById('transfer-overlay').classList.remove('on');}
@@ -3928,7 +3986,7 @@ function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
   pendingDel={type:'transfer',id};
   document.getElementById('conf-txt').textContent=t?`¿Eliminar transferencia "${t.description}"?\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
 /* ══════════════════════════════════
@@ -3954,7 +4012,7 @@ function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();rend
 function openBudgetModal(){
   document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
-  document.getElementById('budget-overlay').classList.add('on');
+  document.getElementById('budget-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('bdg-amt').focus(),200);
 }
 function closeBudgetModal(){document.getElementById('budget-overlay').classList.remove('on');}
@@ -3990,7 +4048,7 @@ function openGoalModal(id=null){
   document.getElementById('gl-id').value=id||'';document.getElementById('gl-name').value=g?.name||'';
   document.getElementById('gl-target').value=g?.target||'';document.getElementById('gl-current').value=g?.current||0;
   document.getElementById('gl-emoji-preview').textContent=g?.emoji||'🎯';
-  document.getElementById('goal-overlay').classList.add('on');setTimeout(()=>document.getElementById('gl-name').focus(),200);
+  document.getElementById('goal-overlay').classList.add('on');history.pushState({modal:true},'');setTimeout(()=>document.getElementById('gl-name').focus(),200);
 }
 function closeGoalModal(){document.getElementById('goal-overlay').classList.remove('on');}
 function goalOverlayClick(ev){if(ev.target===document.getElementById('goal-overlay'))closeGoalModal();}
@@ -4018,7 +4076,7 @@ function addToGoal(id){
 function deleteGoal(id){
   const g=goals.find(x=>x.id===id);pendingDel={type:'goal',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar la meta "${g?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');
+  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
 /* ══════════════════════════════════
@@ -4046,7 +4104,7 @@ let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
   document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
-  document.getElementById('qa-overlay').classList.add('on');
+  document.getElementById('qa-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
 function closeQuickAdd(){document.getElementById('qa-overlay').classList.remove('on');}
@@ -4145,7 +4203,7 @@ function openAdjustModal(accId, ev){
   document.getElementById('adj-acc').innerHTML = opts;
   document.getElementById('adj-real').value = '';
   document.getElementById('adj-hint').textContent = 'Escribí el saldo real para ver la diferencia';
-  document.getElementById('adjust-overlay').classList.add('on');
+  document.getElementById('adjust-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(() => document.getElementById('adj-real')?.focus(), 200);
 }
 function closeAdjustModal(){ document.getElementById('adjust-overlay').classList.remove('on'); }
