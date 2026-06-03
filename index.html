@@ -2571,7 +2571,11 @@ function openModal(data=null){
     accOpts+='<optgroup label="💳 Tarjetas">'+cards.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')+'</optgroup>';
   }
   accSel.innerHTML=accOpts;
-  accSel.value=data?.accountId||'';
+  // Smart default: use existing accountId, or only wallet if there's just one, or last used
+  const lastUsed=localStorage.getItem('gp_last_acc_'+currentUID)||'';
+  const defaultAcc = data?.accountId
+    || (wallets.length===1 ? wallets[0].id : (lastUsed||''));
+  accSel.value=defaultAcc;
   accHint.style.display=(accounts&&accounts.length)?'none':'block';
   onAccountSelected(); // show/hide card type section
   buildCatSelect(data?.category||null);
@@ -2765,6 +2769,7 @@ async function saveExpense(){
   const amt=parseFloat(document.getElementById('f-amt').value);
   const recurring=document.getElementById('f-recur').checked;
   const accountId=document.getElementById('f-account')?.value||null;
+  if(accountId&&currentUID) localStorage.setItem('gp_last_acc_'+currentUID, accountId);
   const currency=document.getElementById('f-currency')?.value||'ARS';
   const exchangeRate=currency==='USD'?(parseFloat(document.getElementById('f-tc').value)||null):null;
   const arsEquiv=currency==='USD'?(parseFloat(document.getElementById('f-ars-equiv').value)||null):null;
@@ -4091,6 +4096,15 @@ function renderPatrimonioCard(){
     </div>`;
   }).join('');
 
+  // Count unassigned movements
+  const unassigned = expenses.filter(e => !e.accountId && e.type === 'Egreso').length
+    + expenses.filter(e => !e.accountId && e.type === 'Ingreso').length;
+  const unassignedWarning = unassigned > 0
+    ? `<div style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">
+        ⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera asignada — no afectan este saldo
+       </div>`
+    : '';
+
   const totalCls = total > 0 ? 'pos' : total < 0 ? 'neg' : '';
   el.innerHTML = `<div class="pat-card" onclick="togglePatrimonio()">
     <div class="pat-header">
@@ -4099,6 +4113,7 @@ function renderPatrimonioCard(){
     </div>
     <div class="pat-total">${total < 0 ? '-' : ''}${fmt(total)}</div>
     <div class="pat-hint">${wallets.length} billetera${wallets.length !== 1 ? 's' : ''} · tocá para ver detalle</div>
+    ${unassignedWarning}
     <div class="pat-detail ${patrimonioExpanded ? 'open' : ''}" id="pat-detail">
       <div class="pat-divider"></div>
       ${rows}
