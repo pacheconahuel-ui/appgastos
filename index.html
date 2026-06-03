@@ -378,6 +378,33 @@
     .btn-pay-cc{width:100%;padding:11px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(217,119,6,.1));border:1px solid rgba(245,158,11,.35);border-radius:11px;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:10px;transition:all .18s}
     .btn-pay-cc:hover{background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(217,119,6,.2))}
 
+    /* PATRIMONIO CARD */
+    .pat-card{background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(118,75,162,.10));border:1px solid rgba(102,126,234,.25);border-radius:18px;padding:16px 18px;margin-bottom:14px;cursor:pointer;transition:all .2s;user-select:none}
+    .pat-card:hover{background:linear-gradient(135deg,rgba(102,126,234,.18),rgba(118,75,162,.15));}
+    .pat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+    .pat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3)}
+    .pat-chevron{font-size:14px;color:var(--txt3);transition:transform .2s}
+    .pat-chevron.open{transform:rotate(180deg)}
+    .pat-total{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;background:linear-gradient(135deg,var(--p1),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:4px}
+    .pat-hint{font-size:11px;color:var(--txt3);margin-bottom:0}
+    .pat-detail{overflow:hidden;max-height:0;transition:max-height .3s ease}
+    .pat-detail.open{max-height:400px}
+    .pat-divider{height:1px;background:var(--bdr);margin:12px 0}
+    .pat-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--bdr)}
+    .pat-row:last-child{border-bottom:none}
+    .pat-acc-left{display:flex;align-items:center;gap:10px}
+    .pat-acc-ico{font-size:18px;width:26px;text-align:center}
+    .pat-acc-name{font-size:13px;font-weight:600;color:var(--txt2)}
+    .pat-acc-bal{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600}
+    .pat-acc-bal.pos{color:var(--green)} .pat-acc-bal.neg{color:var(--red)} .pat-acc-bal.zero{color:var(--txt3)}
+    .pat-actions{display:flex;gap:8px;margin-top:12px}
+    .pat-btn{flex:1;padding:9px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:1px solid;transition:all .18s;text-align:center}
+    .pat-btn.primary{background:rgba(102,126,234,.1);color:var(--p1);border-color:rgba(102,126,234,.25)}
+    .pat-btn.primary:hover{background:rgba(102,126,234,.2)}
+    .pat-btn.secondary{background:var(--surf);color:var(--txt3);border-color:var(--bdr)}
+    .pat-btn.secondary:hover{background:var(--surf2)}
+    .pat-setup{text-align:center;padding:12px 0;color:var(--txt3);font-size:12px}
+
     /* CATEGORY DROPDOWN */
     .cat-drop-item{padding:10px 14px;cursor:pointer;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;transition:background .12s;border-radius:8px;margin:2px 4px}
     .cat-drop-item:hover,.cat-drop-item.focused{background:rgba(102,126,234,.12);color:var(--txt)}
@@ -600,6 +627,8 @@
 
   <!-- DASHBOARD -->
   <div class="sec on" id="tab-dashboard">
+    <!-- Patrimonio card — always on top -->
+    <div id="patrimonio-card"></div>
     <!-- Month navigator -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:10px 14px">
       <button onclick="dashNavMonth(-1)" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">‹</button>
@@ -1894,7 +1923,7 @@ function personDebtsSettled(personId){return debts.filter(d=>d.personId===person
 /* ══════════════════════════════════
    RENDER ALL
 ══════════════════════════════════ */
-function renderAll(){renderDashboard();renderListSec();renderUsdTab();renderSaldosTab();if(activeTab==='cuentas')renderCuentasTab();}
+function renderAll(){renderDashboard();renderListSec();renderUsdTab();renderSaldosTab();if(activeTab==='cuentas')renderCuentasTab();try{renderPatrimonioCard();}catch(e){}}
 
 function getDashMk(){
   // If user hasn't navigated, auto-pick: current month if it has data, else most recent month with data
@@ -1944,6 +1973,7 @@ function renderDashboard(){
 
   try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
   try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
+  try{renderPatrimonioCard();}catch(e){console.warn('patrimonio:',e);}
   if(isCurrent){
     try{renderProjection();}catch(e){console.warn('projection:',e);}
     try{renderRecurringReminders();}catch(e){console.warn('reminders:',e);}
@@ -3015,7 +3045,14 @@ function delUsdTx(id,ev){
   document.getElementById('conf-txt').textContent=t?`"${t.description}" · ${fmtU(t.usdAmount)}${t.linkedArsId?'\n(también se eliminará el ingreso ARS asociado)':''}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
   document.getElementById('conf-overlay').classList.add('on');
 }
-function closeConf(){pendingDel=null;document.getElementById('conf-overlay').classList.remove('on');}
+function closeConf(){
+  pendingDel=null;
+  document.getElementById('conf-overlay').classList.remove('on');
+  // Reset to default delete dialog in case adjust modal changed it
+  document.getElementById('conf-ico').textContent='🗑️';
+  document.getElementById('conf-ttl').textContent='¿Eliminar?';
+  document.getElementById('conf-btns').innerHTML=`<button class="btn-no" onclick="closeConf()">Cancelar</button><button class="btn-yes" onclick="doDelete()">Eliminar</button>`;
+}
 
 async function doDelete(){
   if(!pendingDel){closeConf();return;}
@@ -4002,6 +4039,145 @@ async function saveQuickAdd(){
   const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
   expenses.push(exp);haptic();closeQuickAdd();renderAll();toast(`✅ ${icon(_qaCat)} ${fmt(amt)} en ${_qaCat}`);
   skipNextArs=fbOnline;await persistArs(exp,null);
+}
+
+// --- PATRIMONIO ---
+let patrimonioExpanded = false;
+
+function renderPatrimonioCard(){
+  const el = document.getElementById('patrimonio-card');
+  if(!el) return;
+  const wallets = walletAccounts();
+  if(!wallets.length){
+    el.innerHTML = `<div class="pat-card" onclick="switchTab('cuentas')">
+      <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span></div>
+      <div class="pat-setup">No tenés billeteras creadas aún.<br><b style="color:var(--p1)">Tocá para agregar tus cuentas →</b></div>
+    </div>`;
+    return;
+  }
+  let total = 0;
+  const rows = wallets.map(a => {
+    const bal = accountBalance(a.id);
+    total += bal;
+    const cls = bal > 0 ? 'pos' : bal < 0 ? 'neg' : 'zero';
+    return `<div class="pat-row">
+      <div class="pat-acc-left">
+        <span class="pat-acc-ico">${a.emoji}</span>
+        <span class="pat-acc-name">${esc(a.name)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="pat-acc-bal ${cls}">${bal < 0 ? '-' : ''}${fmt(bal)}</span>
+        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar saldo" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">⚙</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalCls = total > 0 ? 'pos' : total < 0 ? 'neg' : '';
+  el.innerHTML = `<div class="pat-card" onclick="togglePatrimonio()">
+    <div class="pat-header">
+      <span class="pat-label">💰 Disponible ahora</span>
+      <span class="pat-chevron ${patrimonioExpanded ? 'open' : ''}" id="pat-chev">▾</span>
+    </div>
+    <div class="pat-total">${total < 0 ? '-' : ''}${fmt(total)}</div>
+    <div class="pat-hint">${wallets.length} billetera${wallets.length !== 1 ? 's' : ''} · tocá para ver detalle</div>
+    <div class="pat-detail ${patrimonioExpanded ? 'open' : ''}" id="pat-detail">
+      <div class="pat-divider"></div>
+      ${rows}
+      <div class="pat-actions">
+        <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">💼 Gestionar cuentas</button>
+        <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">⚖️ Registrar ajuste</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function togglePatrimonio(){
+  patrimonioExpanded = !patrimonioExpanded;
+  const detail = document.getElementById('pat-detail');
+  const chev = document.getElementById('pat-chev');
+  if(detail) detail.classList.toggle('open', patrimonioExpanded);
+  if(chev) chev.classList.toggle('open', patrimonioExpanded);
+}
+
+// Adjust modal — for fixing balance discrepancies
+function openAdjustModal(accId, ev){
+  ev?.stopPropagation();
+  const wallets = walletAccounts();
+  if(!wallets.length){ toast('⚠️ Primero creá una billetera'); return; }
+
+  const a = accId ? accounts.find(x => x.id === accId) : null;
+  const currentBal = a ? accountBalance(a.id) : null;
+
+  const opts = wallets.map(w =>
+    `<option value="${w.id}" ${w.id === accId ? 'selected' : ''}>${w.emoji} ${esc(w.name)}</option>`
+  ).join('');
+
+  // Reuse the generic confirm modal as a simple dialog
+  document.getElementById('conf-ico').textContent = '⚖️';
+  document.getElementById('conf-ttl').textContent = 'Registrar ajuste de saldo';
+  document.getElementById('conf-txt').textContent =
+    `Usá esto cuando la app no coincide con la billetera real.\nSe crea un ingreso o gasto de "Ajuste" con la diferencia.`;
+
+  // Replace confirm buttons with a custom form
+  document.getElementById('conf-btns').innerHTML = `
+    <div style="width:100%;text-align:left">
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Billetera</label>
+        <select class="f-ctrl" id="adj-acc" style="width:100%" onchange="updateAdjHint()">${opts}</select>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Saldo real ahora ($)</label>
+        <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="decimal" step="any" oninput="updateAdjHint()">
+      </div>
+      <div id="adj-hint" style="font-size:12px;color:var(--txt3);margin-bottom:14px;min-height:18px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-yes" style="background:rgba(102,126,234,.15)!important;color:var(--p1)!important;border-color:rgba(102,126,234,.3)!important" onclick="saveAdjust()">✅ Registrar</button>
+        <button class="btn-no" onclick="closeConf()">Cancelar</button>
+      </div>
+    </div>`;
+  document.getElementById('conf-overlay').classList.add('on');
+  setTimeout(() => document.getElementById('adj-real')?.focus(), 200);
+}
+
+function updateAdjHint(){
+  const accId = document.getElementById('adj-acc')?.value;
+  const realVal = parseFloat(document.getElementById('adj-real')?.value);
+  const hint = document.getElementById('adj-hint');
+  if(!hint || !accId || isNaN(realVal)) { if(hint) hint.textContent = ''; return; }
+  const appBal = accountBalance(accId);
+  const diff = realVal - appBal;
+  if(diff === 0){ hint.textContent = '✅ El saldo ya coincide'; hint.style.color = 'var(--green)'; return; }
+  const acc = accounts.find(a => a.id === accId);
+  hint.style.color = 'var(--yellow)';
+  hint.textContent = diff > 0
+    ? `Se va a crear un Ingreso de ${fmt(diff)} en ${acc?.name} (diferencia positiva)`
+    : `Se va a crear un Gasto de ${fmt(Math.abs(diff))} en ${acc?.name} (diferencia negativa)`;
+}
+
+async function saveAdjust(){
+  const accId = document.getElementById('adj-acc')?.value;
+  const realVal = parseFloat(document.getElementById('adj-real')?.value);
+  if(!accId || isNaN(realVal)){ toast('⚠️ Completá los datos'); return; }
+  const appBal = accountBalance(accId);
+  const diff = realVal - appBal;
+  if(diff === 0){ closeConf(); toast('✅ Sin diferencia, no se hizo nada'); return; }
+  const acc = accounts.find(a => a.id === accId);
+  const exp = {
+    id: newId(),
+    type: diff > 0 ? 'Ingreso' : 'Egreso',
+    date: new Date().toISOString().split('T')[0],
+    category: diff > 0 ? 'Sueldo' : 'Otro',
+    description: `Ajuste de saldo — ${acc?.name}`,
+    amount: Math.abs(diff), myAmount: Math.abs(diff),
+    accountId: accId,
+    currency: 'ARS', shared: false, sharedPercent: 100,
+    notes: 'Ajuste manual para corregir diferencia de saldo',
+    createdAt: Date.now(), updatedAt: Date.now()
+  };
+  expenses.push(exp);
+  closeConf(); haptic(); renderAll();
+  toast(`✅ Ajuste de ${fmt(Math.abs(diff))} registrado en ${acc?.name}`);
+  skipNextArs = fbOnline; await persistArs(exp, null);
 }
 
 /* ══════════════════════════════════
