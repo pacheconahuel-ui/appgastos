@@ -1561,9 +1561,11 @@ async function persistUsd(tx,removeId){
 }
 async function pushSettings(){
   if(!db||!currentUID)return;
+  const ts=Date.now();
+  // Save timestamp locally BEFORE pushing so listener knows local is authoritative
+  localStorage.setItem(lsKey('gp_settings_ts'), String(ts));
   saveLocal();
   if(!fbOnline){
-    // Queue settings push for when we come back online
     localStorage.setItem('gp_settings_pending','1');
     return;
   }
@@ -1580,7 +1582,7 @@ async function pushSettings(){
     transfers,
     budgets,
     goals,
-    updatedAt:Date.now()
+    updatedAt:ts
   };
   await fbSet(settingsPath(),payload).catch(e=>{
     console.warn('[FB] pushSettings failed, queuing:',e);
@@ -1679,10 +1681,22 @@ function attachListeners(){
   },err=>console.warn('[FB] debts:',err));
 
   // Settings listener — syncs cats, persons, accounts, budgets, goals across devices
+  // Only applies Firebase settings if they're NEWER than local changes
   db.ref(settingsPath()).on('value',snap=>{
     if(skipNextSettings){skipNextSettings=false;return;}
     const raw=snap.val();
     if(!raw)return;
+
+    // Timestamp check: only apply if Firebase is newer than local
+    const localTs=parseInt(localStorage.getItem(lsKey('gp_settings_ts'))||'0');
+    const remoteTs=raw.updatedAt||0;
+    if(remoteTs < localTs){
+      // Local is newer — push local to Firebase instead
+      console.log('[Settings] Local newer ('+localTs+' > '+remoteTs+') — pushing local up');
+      pushSettings();
+      return;
+    }
+
     if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
     if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
     if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
@@ -1693,10 +1707,10 @@ function attachListeners(){
     if(raw.transfers)    transfers=raw.transfers||[];
     if(raw.budgets)      budgets=raw.budgets||{};
     if(raw.goals)        goals=raw.goals||[];
-    saveLocal();
-    saveAccounts();
-    saveBudgets();
-    saveGoals();
+
+    // Save the remote timestamp as our new baseline
+    localStorage.setItem(lsKey('gp_settings_ts'), String(remoteTs));
+    saveLocal();saveAccounts();saveBudgets();saveGoals();
     renderAll();
     if(activeTab==='cuentas')renderCuentasTab();
   },err=>console.warn('[FB] settings:',err));
@@ -1850,6 +1864,9 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="runDiagnostics()">
       <span class="par-ico">🔬</span>Verificar datos en Firebase<span class="par-chevron">›</span>
     </button>
+    <button class="profile-action-row" onclick="forceSyncSettings(this)">
+      <span class="par-ico">🔄</span>Forzar sync de categorías<span class="par-chevron" id="force-sync-status">›</span>
+    </button>
     <div id="diag-result"></div>
     <div class="profile-sec-lbl">Cuenta</div>
     <button class="profile-action-row" onclick="doLogout()" style="color:var(--red)">
@@ -1867,6 +1884,25 @@ function renderProfileThemeRow(){
 }
 function closeProfilePanel(){document.getElementById('profile-overlay').classList.remove('on');}
 function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
+
+async function forceSyncSettings(btn){
+  const statusEl=document.getElementById('force-sync-status');
+  if(statusEl)statusEl.textContent='⏳';
+  if(btn)btn.style.opacity='.6';
+  try{
+    // Force timestamp to now so this always wins
+    localStorage.setItem(lsKey('gp_settings_ts'), String(Date.now()));
+    await pushSettings();
+    if(statusEl)statusEl.textContent='✅';
+    if(btn)btn.style.opacity='1';
+    toast('✅ Categorías y configuración sincronizadas');
+    setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
+  }catch(e){
+    if(statusEl)statusEl.textContent='❌';
+    if(btn)btn.style.opacity='1';
+    toast('❌ Error al sincronizar: '+e.message);
+  }
+}
 
 async function runDiagnostics(){
   const el=document.getElementById('diag-result');
