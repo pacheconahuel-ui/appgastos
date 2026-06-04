@@ -1505,6 +1505,12 @@ function setStatus(state,label){
   const span=document.getElementById('sync-label');
   ['connecting','online','offline','syncing'].forEach(s=>pill.classList.remove(s));
   pill.classList.add(state);span.textContent=label;
+  // If settings are pending, add warning to the pill
+  const settingsPending=currentUID&&localStorage.getItem('gp_settings_pending');
+  if(settingsPending&&state==='online'){
+    pill.classList.remove('online');pill.classList.add('syncing');
+    span.textContent='⚙ Config pendiente';
+  }
 }
 
 /* ══════════════════════════════════
@@ -1584,9 +1590,13 @@ async function pushSettings(){
     goals,
     updatedAt:ts
   };
-  await fbSet(settingsPath(),payload).catch(e=>{
+  await fbSet(settingsPath(),payload).then(()=>{
+    localStorage.removeItem('gp_settings_pending');
+    setStatus('online','● Sincronizado');
+  }).catch(e=>{
     console.warn('[FB] pushSettings failed, queuing:',e);
     localStorage.setItem('gp_settings_pending','1');
+    setStatus('offline','⚙ Config pendiente');
   });
 }
 
@@ -1723,10 +1733,21 @@ function initFirebase(){
     db=firebase.database();auth=firebase.auth();
     db.ref('.info/connected').on('value',async snap=>{
       const was=fbOnline;fbOnline=!!snap.val();
-      if(fbOnline){setStatus('online','● Sincronizado');if(!was&&fbReady&&currentUID){await flushQueueFor('ars');await flushQueueFor('usd');await flushQueueFor('debt');
-        // Flush pending settings if any
-        if(localStorage.getItem('gp_settings_pending')){localStorage.removeItem('gp_settings_pending');await pushSettings();}
-      }}
+      if(fbOnline){
+        setStatus('online','● Sincronizado');
+        if(!was&&fbReady&&currentUID){
+          await flushQueueFor('ars');
+          await flushQueueFor('usd');
+          await flushQueueFor('debt');
+          // Flush pending settings if any
+          if(localStorage.getItem('gp_settings_pending')){
+            localStorage.removeItem('gp_settings_pending');
+            await pushSettings();
+            toast('☁️ Configuración sincronizada');
+            setStatus('online','● Sincronizado');
+          }
+        }
+      }
       else setStatus('offline','⚠ Offline');
     });
     auth.onAuthStateChanged(user=>{
