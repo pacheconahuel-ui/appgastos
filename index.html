@@ -2149,11 +2149,24 @@ function renderListSec(){
   el.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('');
   el.value=months.includes(prev)?prev:nowKey();
   const mk=el.value;
-  // Cat filter
+  // Cat filter — build from all categories actually used in expenses that month
+  // (not filtered by cats array, to include ingreso categories too)
   const catSel=document.getElementById('fil-cat'),curCat=catSel.value;
   catSel.innerHTML='<option value="">Todas las categorías</option>';
   const used=new Set(expenses.filter(e=>monthKey(e.date)===mk).map(e=>e.category));
-  cats.filter(c=>used.has(c)).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=`${catIcon(c)} ${displayName(c)}`;catSel.appendChild(o);});
+  // Sort: first match order in cats array, then alphabetical for unknown ones
+  const usedSorted=[...used].sort((a,b)=>{
+    const ia=cats.indexOf(a), ib=cats.indexOf(b);
+    if(ia>=0&&ib>=0)return ia-ib;
+    if(ia>=0)return -1; if(ib>=0)return 1;
+    return displayName(a).localeCompare(displayName(b));
+  });
+  usedSorted.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c;
+    o.textContent=`${catIcon(c)} ${displayName(c)}`;
+    catSel.appendChild(o);
+  });
   if(curCat)catSel.value=curCat;
   const search=(document.getElementById('fil-search')?.value||'').toLowerCase().trim();
   const catFil=catSel.value;
