@@ -3925,6 +3925,7 @@ function pickAccountEmoji(){
   document.getElementById('acc-emoji-preview').parentNode.appendChild(d);
 }
 function saveAccount(){
+  try{
   const id=document.getElementById('acc-id').value;
   const name=document.getElementById('acc-name').value.trim();
   const emoji=document.getElementById('acc-emoji-preview').textContent;
@@ -3946,6 +3947,10 @@ function saveAccount(){
   else accounts.push(acc);
   saveAccounts();pushSettingsDebounced();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
+  }catch(err){
+    console.error('[saveAccount]',err);
+    toast('❌ Error al guardar: '+err.message);
+  }
 }
 function confirmDeleteAccount(id,ev){
   ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
