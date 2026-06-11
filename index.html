@@ -3507,17 +3507,33 @@ function recurringItemHTML(e){
 async function confirmRecurring(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
+
+  // CC fijo recurrente — el gasto original YA está en el estimado del resumen
+  // Solo hay que sacarlo del banner (skip). No crear duplicado.
+  if(tmpl.cardExpType==='recurring'&&tmpl.accountId){
+    const acc=accounts.find(a=>a.id===tmpl.accountId);
+    if(acc?.type==='credit'){
+      skipRecurring(templateId);
+      haptic();
+      toast(`✅ ${esc(tmpl.description||tmpl.category)} — ya figura en el resumen de ${esc(acc.name)}`);
+      return;
+    }
+  }
+
+  // Wallet recurring — crear copia para este mes
   const today=new Date().toISOString().split('T')[0];
   const exp={
     ...tmpl,
     id:newId(),
     date:today,
     ccPaid:false,
+    // Make the copy a one-time expense so it doesn't re-appear in banner
+    cardExpType:tmpl.cardExpType==='recurring'?'one':tmpl.cardExpType,
     createdAt:Date.now(),updatedAt:Date.now()
   };
   expenses.push(exp);
   haptic();renderAll();
-  toast(`✅ ${esc(exp.description)} confirmado`);
+  toast(`✅ ${esc(exp.description||exp.category)} confirmado`);
   skipNextArs=fbOnline;await persistArs(exp,null);
   renderRecurringReminders();
 }
