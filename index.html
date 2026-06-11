@@ -1894,7 +1894,10 @@ function openProfilePanel(){
       <span class="par-ico">🔬</span>Verificar datos en Firebase<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="forceSyncSettings(this)">
-      <span class="par-ico">🔄</span>Traer config del servidor<span class="par-chevron" id="force-sync-status">›</span>
+      <span class="par-ico">⬇️</span>Traer config del servidor<span class="par-chevron" id="force-sync-status">›</span>
+    </button>
+    <button class="profile-action-row" onclick="forcePushSettings(this)">
+      <span class="par-ico">⬆️</span>Subir mi config al servidor<span class="par-chevron" id="force-push-status">›</span>
     </button>
     <div id="diag-result"></div>
     <div class="profile-sec-lbl">Cuenta</div>
@@ -1913,6 +1916,23 @@ function renderProfileThemeRow(){
 }
 function closeProfilePanel(){document.getElementById('profile-overlay').classList.remove('on');}
 function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
+
+async function forcePushSettings(btn){
+  const statusEl=document.getElementById('force-push-status');
+  if(statusEl)statusEl.textContent='⏳';
+  if(btn)btn.style.opacity='.6';
+  try{
+    await pushSettings();
+    if(statusEl)statusEl.textContent='✅';
+    if(btn)btn.style.opacity='1';
+    toast('✅ Tu configuración fue subida al servidor');
+    setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
+  }catch(e){
+    if(statusEl)statusEl.textContent='❌';
+    if(btn)btn.style.opacity='1';
+    toast('❌ Error: '+(e.message||e));
+  }
+}
 
 async function forceSyncSettings(btn){
   const statusEl=document.getElementById('force-sync-status');
