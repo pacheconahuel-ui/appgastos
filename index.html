@@ -2083,8 +2083,8 @@ function personBalance(personId){
   // positive = they owe me, negative = I owe them
   return debts.filter(d=>d.personId===personId&&!d.settled).reduce((s,d)=>s+d.amount,0);
 }
-function personDebtsActive(personId){return debts.filter(d=>d.personId===personId&&!d.settled).sort((a,b)=>b.date?.localeCompare(a.date)||b.createdAt-a.createdAt);}
-function personDebtsSettled(personId){return debts.filter(d=>d.personId===personId&&d.settled).sort((a,b)=>b.settledDate?.localeCompare(a.settledDate)||0);}
+function personDebtsActive(personId){return debts.filter(d=>d.personId===personId&&!d.settled).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);}
+function personDebtsSettled(personId){return debts.filter(d=>d.personId===personId&&d.settled).sort((a,b)=>(b.settledDate||'').localeCompare(a.settledDate||'')||0);}
 
 /* ══════════════════════════════════
    RENDER ALL
@@ -2153,7 +2153,7 @@ function renderDashboard(){
 
   // Últimos 10 movimientos — todos los meses
   const recent=[...expenses]
-    .sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt)
     .slice(0,10);
   const recentEl=document.getElementById('recent-list');
   if(recentEl)recentEl.innerHTML=recent.length
@@ -2201,7 +2201,7 @@ function renderListSec(){
   let rows=expenses.filter(e=>monthKey(e.date)===mk);
   if(search)rows=rows.filter(e=>(e.description||'').toLowerCase().includes(search)||(e.category||'').toLowerCase().includes(search));
   if(catFil)rows=rows.filter(e=>e.category===catFil);
-  rows.sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
+  rows.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);
   const hasFilter=search||catFil;
   document.getElementById('list-count').textContent=rows.length?`${rows.length} resultado${rows.length>1?'s':''}${hasFilter?' (filtrado)':''}` :'';
   document.getElementById('full-list').innerHTML=rows.length?rows.map(e=>expHTML(e,true)).join(''):`<div class="empty"><div class="empty-ico">${hasFilter?'🔍':'📭'}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
@@ -2221,12 +2221,12 @@ function renderUsdTab(){
   document.getElementById('usd-c-ars').textContent=fmt(arsAmt);
   document.getElementById('usd-c-tc').textContent=soldAmt>0?fmtTC(arsAmt/soldAmt):'—';
   renderTcChart();
-  const sorted=[...usdTx].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
+  const sorted=[...usdTx].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);
   document.getElementById('usd-list').innerHTML=sorted.length?sorted.map(t=>usdTxHTML(t)).join(''):'<div class="empty"><div class="empty-ico">💵</div><p>Sin movimientos USD</p></div>';
 }
 
 function renderTcChart(){
-  const ventas=usdTx.filter(t=>t.type==='venta'&&t.arsAmount&&t.usdAmount).sort((a,b)=>a.date.localeCompare(b.date));
+  const ventas=usdTx.filter(t=>t.type==='venta'&&t.arsAmount&&t.usdAmount).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const box=document.getElementById('usd-chart-box');
   if(ventas.length<1){box.classList.add('hidden');if(tcChart){tcChart.destroy();tcChart=null;}return;}
   box.classList.remove('hidden');
@@ -3386,7 +3386,7 @@ function exportCSV(){
   if(!rows.length){toast('⚠️ No hay gastos para exportar');return;}
   const headers=['Fecha','Tipo','Categoría','Descripción','Notas','Monto Total','Mi Parte','Compartido','Recurrente'];
   const lines=[headers.join(',')];
-  rows.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+  rows.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(e=>{
     const splitNames=e.splits?e.splits.map(s=>s.personName).join('+'):'';
     lines.push([
       e.date, e.type, e.category,
@@ -3840,7 +3840,7 @@ function renderCuentasTab(){
   document.getElementById('cuentas-total-ars').textContent=fmt(arsTotal);
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
   document.getElementById('cuentas-transfers-count').textContent=`${mTf.length} transferencia${mTf.length!==1?'s':''}`;
-  const tHtml=transfers.length?[...transfers].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).map(t=>{
+  const tHtml=transfers.length?[...transfers].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(t=>{
     const fr=accounts.find(a=>a.id===t.fromId),to=accounts.find(a=>a.id===t.toId);
     return`<div class="transfer-box"><div style="font-size:20px">${fr?.emoji||'💼'}</div>
       <div class="exp-info"><div class="exp-desc">${esc(t.description||'Transferencia')}</div><div class="exp-meta">${fmtDate(t.date)} · ${esc(fr?.name||'?')} → ${esc(to?.name||'?')}</div></div>
