@@ -1565,6 +1565,12 @@ async function persistUsd(tx,removeId){
   if(ok){usdPendQ=usdPendQ.filter(p=>p.path!==usdPath(removeId||tx?.id));saveLocal();setStatus('online','● Sincronizado');}
   else{if(removeId)enqueue('usd','remove',usdPath(removeId),null);else if(tx)enqueue('usd','set',usdPath(tx.id),tx);setStatus('offline','⚠ Offline');}
 }
+// Debounced pushSettings — coalesces rapid calls (e.g. save account then close modal) into one
+let _pushSettingsTimer=null;
+function pushSettings(){
+  if(_pushSettingsTimer)clearTimeout(_pushSettingsTimer);
+  _pushSettingsTimer=setTimeout(()=>{_pushSettingsTimer=null;pushSettings();},600);
+}
 async function pushSettings(){
   if(!db||!currentUID)return;
   const ts=Date.now();
@@ -1703,7 +1709,7 @@ function attachListeners(){
     if(remoteTs < localTs){
       // Local is newer — push local to Firebase instead
       console.log('[Settings] Local newer ('+localTs+' > '+remoteTs+') — pushing local up');
-      pushSettings();
+      pushSettingsDebounced();
       return;
     }
 
@@ -1766,7 +1772,7 @@ function initFirebase(){
         setTimeout(()=>{
           if(localStorage.getItem('gp_settings_pending')){
             console.log('[Settings] Pending changes found — pushing to Firebase');
-            pushSettings();
+            pushSettingsDebounced();
           }
         }, 4000); // 4s gives the settings listener time to fire first
       }else showApp(null);
@@ -2027,7 +2033,7 @@ function editCatIcon(catName){
   const t=newIco.trim();
   const ov=loadIconOverrides();
   ov[catName]=t;
-  saveIconOverrides(ov);pushSettings();
+  saveIconOverrides(ov);pushSettingsDebounced();
   renderCatManager();
   renderAll();
   toast(`✅ Ícono de "${catName}" cambiado a ${t}`);
@@ -2611,7 +2617,7 @@ function saveContact(){
 
   if(id){const i=persons.findIndex(x=>x.id===id);if(i>-1)persons[i]=p;else persons.push(p);}
   else persons.push(p);
-  saveLocal();pushSettings();
+  saveLocal();pushSettingsDebounced();
 
   closeAddContactModal();
   // If opened from split panel, add to split
@@ -2710,7 +2716,7 @@ function openModal(data=null){
   }
   accSel.innerHTML=accOpts;
   // Smart default: use existing accountId, or only wallet if there's just one, or last used
-  const lastUsed=localStorage.getItem('gp_last_acc_'+currentUID)||'';
+  const lastUsed=localStorage.getItem(lsKey('gp_last_acc'))||'';
   const defaultAcc = data?.accountId
     || (wallets.length===1 ? wallets[0].id : (lastUsed||''));
   accSel.value=defaultAcc;
@@ -2814,7 +2820,7 @@ function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   const type=(document.getElementById('f-type')?.value||'Egreso')==='Ingreso'?'ingreso':'egreso';
-  cats.push(t);setCatType(t,type);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
+  cats.push(t);setCatType(t,type);saveLocal();pushSettingsDebounced();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
 }
 function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');history.pushState({modal:true},'');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
@@ -2856,11 +2862,11 @@ function addCatTyped(type='egreso'){
   const name=prompt(`Nueva categoría de ${type==='ingreso'?'ingreso':'egreso'}:`);
   if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  cats.push(t);setCatType(t,type);saveLocal();pushSettings();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
+  cats.push(t);setCatType(t,type);saveLocal();pushSettingsDebounced();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
 }
 function toggleCatType(cat){
   const next=catTypeFor(cat)==='ingreso'?'egreso':'ingreso';
-  setCatType(cat,next);saveLocal();pushSettings();renderCatManager();buildCatSelect(null);
+  setCatType(cat,next);saveLocal();pushSettingsDebounced();renderCatManager();buildCatSelect(null);
   toast(`✅ "${displayName(cat)}" ahora es ${next==='ingreso'?'Ingreso':'Egreso'}`);
 }
 function renameCat(oldName){
@@ -2869,7 +2875,7 @@ function renameCat(oldName){
   const idx=cats.indexOf(oldName);if(idx>-1)cats[idx]=t;
   catTypes[t]=catTypeFor(oldName);delete catTypes[oldName];
   expenses=expenses.map(e=>e.category===oldName?{...e,category:t}:e);
-  saveLocal();pushSettings();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
+  saveLocal();pushSettingsDebounced();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
   buildCatSelect(t);renderCatManager();renderAll();toast(`✅ "${oldName}" → "${t}"`);
 }
 
@@ -2878,7 +2884,7 @@ function renameDefCat(originalName){
   const newLabel=prompt(`Renombrar "${current}" a:`,current);
   if(!newLabel?.trim()||newLabel.trim()===current)return;
   renamedCats[originalName]=newLabel.trim();
-  saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
+  saveLocal();pushSettingsDebounced();buildCatSelect(null);renderCatManager();
   renderAll(); // update existing expenses, charts, filters
   toast(`✅ Listo — ahora se llama "${newLabel.trim()}" en todos lados`);
 }
@@ -2891,7 +2897,7 @@ function toggleHideCat(cat){
     hiddenCats.add(cat);
     toast(`🙈 "${displayName(cat)}" oculta`);
   }
-  saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
+  saveLocal();pushSettingsDebounced();buildCatSelect(null);renderCatManager();
 }
 
 /* ══════════════════════════════════
@@ -2907,7 +2913,7 @@ async function saveExpense(){
   const amt=parseFloat(document.getElementById('f-amt').value);
   const recurring=document.getElementById('f-recur').checked;
   const accountId=document.getElementById('f-account')?.value||null;
-  if(accountId&&currentUID) localStorage.setItem('gp_last_acc_'+currentUID, accountId);
+  if(accountId&&currentUID) localStorage.setItem(lsKey('gp_last_acc'), accountId);
   const currency=document.getElementById('f-currency')?.value||'ARS';
   const exchangeRate=currency==='USD'?(parseFloat(document.getElementById('f-tc').value)||null):null;
   const arsEquiv=currency==='USD'?(parseFloat(document.getElementById('f-ars-equiv').value)||null):null;
@@ -3221,26 +3227,26 @@ async function doDelete(){
   const{type,id,name}=pendingDel;closeConf();
   if(type==='cat'){
     haptic([30,30,60]);
-    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
+    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettingsDebounced();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
     return;
   }
   if(type==='contact'){
     haptic([30,30,60]);
-    persons=persons.filter(p=>p.id!==id);saveLocal();pushSettings();
+    persons=persons.filter(p=>p.id!==id);saveLocal();pushSettingsDebounced();
     renderContactsList();renderSaldosTab();buildDebtPersonSelect();
     toast('🗑️ Contacto eliminado');return;
   }
   if(type==='account'){
     haptic([30,30,60]);
-    accounts=accounts.filter(a=>a.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Billetera eliminada');return;
+    accounts=accounts.filter(a=>a.id!==id);saveAccounts();pushSettingsDebounced();renderCuentasTab();toast('🗑️ Billetera eliminada');return;
   }
   if(type==='transfer'){
     haptic([30,30,60]);
-    transfers=transfers.filter(x=>x.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Transferencia eliminada');return;
+    transfers=transfers.filter(x=>x.id!==id);saveAccounts();pushSettingsDebounced();renderCuentasTab();toast('🗑️ Transferencia eliminada');return;
   }
   if(type==='goal'){
     haptic([30,30,60]);
-    goals=goals.filter(x=>x.id!==id);saveGoals();pushSettings();renderGoalsSection();toast('🗑️ Meta eliminada');return;
+    goals=goals.filter(x=>x.id!==id);saveGoals();pushSettingsDebounced();renderGoalsSection();toast('🗑️ Meta eliminada');return;
   }
   haptic([30,30,60]);
   if(type==='debt'){
@@ -3723,7 +3729,7 @@ function ccEstimated(accId){
   const items=expenses.filter(e=>
     e.accountId===accId &&
     e.type==='Egreso' &&
-    !e.ccPaid
+    e.ccPaid !== true  // handle both false and undefined (old expenses without field)
   );
   let totalARS=0,totalUSD=0;
   const lines=items.map(e=>{
@@ -3747,7 +3753,9 @@ function renderCuentasTab(){
   let walletHtml='';
   let arsTotal=0;
   wallets.forEach(a=>{
-    const bal=accountBalance(a.id);arsTotal+=bal;const bc=bal>=0?'g':'r';
+    const bal=accountBalance(a.id);
+    if(bal===null)return; // CC cards return null — skip
+    arsTotal+=bal;const bc=bal>=0?'g':'r';
     const negAlert=bal<0?'<span style="font-size:10px;color:var(--red);font-weight:700">⚠️ Negativa</span>':'';
     walletHtml+=`<div class="account-card" onclick="openAccountModal('${a.id}')">
       <div class="account-ava" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2)">${a.emoji}</div>
@@ -3888,7 +3896,7 @@ function saveAccount(){
   };
   if(id){const i=accounts.findIndex(a=>a.id===id);if(i>-1)accounts[i]=acc;else accounts.push(acc);}
   else accounts.push(acc);
-  saveAccounts();pushSettings();closeAccountModal();renderCuentasTab();haptic();
+  saveAccounts();pushSettingsDebounced();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
 }
 function confirmDeleteAccount(id,ev){
@@ -4060,7 +4068,7 @@ function saveTransfer(){
   if(fromId===toId){toast('⚠️ Elegí billeteras distintas');return;}
   if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
   transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,description:desc||'Transferencia',createdAt:Date.now()});
-  saveAccounts();pushSettings();closeTransferModal();renderCuentasTab();haptic();toast(`✅ Transferencia de ${fmt(amt)} registrada`);
+  saveAccounts();pushSettingsDebounced();closeTransferModal();renderCuentasTab();haptic();toast(`✅ Transferencia de ${fmt(amt)} registrada`);
 }
 function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
@@ -4088,7 +4096,7 @@ function renderBudgetsSection(){
   });
   el.innerHTML=html;
 }
-function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
+function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettingsDebounced();renderBudgetsSection();}
 function openBudgetModal(){
   document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
@@ -4100,7 +4108,7 @@ function budgetOverlayClick(ev){if(ev.target===document.getElementById('budget-o
 function saveBudget(){
   const cat=document.getElementById('bdg-cat').value,amt=parseFloat(document.getElementById('bdg-amt').value);
   if(!cat){toast('⚠️ Elegí una categoría');return;}if(!amt||amt<=0){toast('⚠️ Ingresá un monto');return;}
-  budgets[cat]=amt;saveBudgets();pushSettings();closeBudgetModal();renderBudgetsSection();haptic();toast(`✅ Presupuesto de ${fmt(amt)}/mes para ${cat}`);
+  budgets[cat]=amt;saveBudgets();pushSettingsDebounced();closeBudgetModal();renderBudgetsSection();haptic();toast(`✅ Presupuesto de ${fmt(amt)}/mes para ${cat}`);
 }
 
 /* ══════════════════════════════════
@@ -4145,13 +4153,13 @@ function saveGoal(){
   if(!name){toast('⚠️ Escribí un nombre');return;}if(!target||target<=0){toast('⚠️ Ingresá la meta');return;}
   const g={id:id||'goal_'+newId(),name,emoji,target,current,createdAt:id?goals.find(x=>x.id===id)?.createdAt||Date.now():Date.now()};
   if(id){const i=goals.findIndex(x=>x.id===id);if(i>-1)goals[i]=g;else goals.push(g);}else goals.push(g);
-  saveGoals();pushSettings();closeGoalModal();renderGoalsSection();haptic();toast(`✅ Meta "${name}" ${id?'actualizada':'creada'}`);
+  saveGoals();pushSettingsDebounced();closeGoalModal();renderGoalsSection();haptic();toast(`✅ Meta "${name}" ${id?'actualizada':'creada'}`);
 }
 function addToGoal(id){
   const g=goals.find(x=>x.id===id);if(!g)return;
   const amt=parseFloat(prompt(`¿Cuánto agregás a "${g.name}"?\nActual: ${fmt(g.current)} / ${fmt(g.target)}`));
   if(!amt||amt<=0||isNaN(amt))return;
-  g.current=Math.min(g.target,g.current+amt);saveGoals();pushSettings();renderGoalsSection();haptic();toast(`✅ +${fmt(amt)} a "${g.name}"`);
+  g.current=Math.min(g.target,g.current+amt);saveGoals();pushSettingsDebounced();renderGoalsSection();haptic();toast(`✅ +${fmt(amt)} a "${g.name}"`);
 }
 function deleteGoal(id){
   const g=goals.find(x=>x.id===id);pendingDel={type:'goal',id};
