@@ -1718,8 +1718,10 @@ function attachListeners(){
     if(raw.budgets)      budgets=raw.budgets||{};
     if(raw.goals)        goals=raw.goals||[];
 
-    // Save the remote timestamp as our new baseline
+    // Save the remote timestamp as our new baseline so we don't re-push these same settings
     localStorage.setItem(lsKey('gp_settings_ts'), String(remoteTs));
+    // Clear pending flag — Firebase already has the latest
+    localStorage.removeItem('gp_settings_pending');
     saveLocal();saveAccounts();saveBudgets();saveGoals();
     renderAll();
     if(activeTab==='cuentas')renderCuentasTab();
@@ -1758,7 +1760,15 @@ function initFirebase(){
         attachListeners();
         showApp(user);
         setTimeout(checkMigration,1500);
-        setTimeout(pushSettings,2000);
+        // Only push settings on login if there are LOCAL changes pending upload
+        // (don't push on every login — it would overwrite Firebase with stale local data
+        //  before the settings listener has a chance to pull the latest from server)
+        setTimeout(()=>{
+          if(localStorage.getItem('gp_settings_pending')){
+            console.log('[Settings] Pending changes found — pushing to Firebase');
+            pushSettings();
+          }
+        }, 4000); // 4s gives the settings listener time to fire first
       }else showApp(null);
     });
     // Handle redirect result (from signInWithRedirect on mobile)
