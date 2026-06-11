@@ -1696,23 +1696,15 @@ function attachListeners(){
     saveLocal();renderAll();
   },err=>console.warn('[FB] debts:',err));
 
-  // Settings listener — syncs cats, persons, accounts, budgets, goals across devices
-  // Only applies Firebase settings if they're NEWER than local changes
+  // Settings listener — always applies Firebase data when it arrives
+  // Echo prevention: skipNextSettings=true before own pushSettings() calls
+  // Cross-device: Firebase is the source of truth — latest push always wins
   db.ref(settingsPath()).on('value',snap=>{
     if(skipNextSettings){skipNextSettings=false;return;}
     const raw=snap.val();
     if(!raw)return;
 
-    // Timestamp check: only apply if Firebase is newer than local
-    const localTs=parseInt(localStorage.getItem(lsKey('gp_settings_ts'))||'0');
-    const remoteTs=raw.updatedAt||0;
-    if(remoteTs < localTs){
-      // Local is newer — push local to Firebase instead
-      console.log('[Settings] Local newer ('+localTs+' > '+remoteTs+') — pushing local up');
-      pushSettingsDebounced();
-      return;
-    }
-
+    // Apply all settings from Firebase
     if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
     if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
     if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
@@ -1724,9 +1716,9 @@ function attachListeners(){
     if(raw.budgets)      budgets=raw.budgets||{};
     if(raw.goals)        goals=raw.goals||[];
 
-    // Save the remote timestamp as our new baseline so we don't re-push these same settings
-    localStorage.setItem(lsKey('gp_settings_ts'), String(remoteTs));
-    // Clear pending flag — Firebase already has the latest
+    // Update local timestamp to match Firebase (prevents pending push from re-uploading old data)
+    if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'), String(raw.updatedAt));
+    // Clear pending flag — Firebase has the latest
     localStorage.removeItem('gp_settings_pending');
     saveLocal();saveAccounts();saveBudgets();saveGoals();
     renderAll();
@@ -1902,7 +1894,7 @@ function openProfilePanel(){
       <span class="par-ico">🔬</span>Verificar datos en Firebase<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="forceSyncSettings(this)">
-      <span class="par-ico">🔄</span>Forzar sync de categorías<span class="par-chevron" id="force-sync-status">›</span>
+      <span class="par-ico">🔄</span>Traer config del servidor<span class="par-chevron" id="force-sync-status">›</span>
     </button>
     <div id="diag-result"></div>
     <div class="profile-sec-lbl">Cuenta</div>
@@ -1927,17 +1919,37 @@ async function forceSyncSettings(btn){
   if(statusEl)statusEl.textContent='⏳';
   if(btn)btn.style.opacity='.6';
   try{
-    // Force timestamp to now so this always wins
-    localStorage.setItem(lsKey('gp_settings_ts'), String(Date.now()));
-    await pushSettings();
+    if(!db||!currentUID)throw new Error('Sin conexión a Firebase');
+    // PULL from Firebase — read and apply server settings
+    const snap=await db.ref(settingsPath()).once('value');
+    const raw=snap.val();
+    if(raw){
+      if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
+      if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
+      if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
+      if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
+      if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
+      if(raw.persons)      persons=raw.persons||[];
+      if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
+      if(raw.transfers)    transfers=raw.transfers||[];
+      if(raw.budgets)      budgets=raw.budgets||{};
+      if(raw.goals)        goals=raw.goals||[];
+      if(raw.updatedAt)    localStorage.setItem(lsKey('gp_settings_ts'),String(raw.updatedAt));
+      localStorage.removeItem('gp_settings_pending');
+      saveLocal();saveAccounts();saveBudgets();saveGoals();
+      renderAll();
+      if(activeTab==='cuentas')renderCuentasTab();
+      toast('✅ Datos actualizados desde el servidor');
+    } else {
+      toast('ℹ Sin configuración en el servidor aún');
+    }
     if(statusEl)statusEl.textContent='✅';
     if(btn)btn.style.opacity='1';
-    toast('✅ Categorías y configuración sincronizadas');
     setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
   }catch(e){
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ Error al sincronizar: '+e.message);
+    toast('❌ Error: '+(e.message||e));
   }
 }
 
